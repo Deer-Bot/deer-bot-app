@@ -1,0 +1,24 @@
+{
+  "name": "deer-bot-app",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Deer-Bot/deer-bot-app.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Deer-Bot/deer-bot-app/issues"
+  },
+  "homepage": "https://github.com/Deer-Bot/deer-bot-app#readme",
+  "devDependencies": {
+    "eslint": "^7.19.0",
+    "eslint-config-google": "^0.14.0"
+  },
+  "private": "true"
+}
