@@ -1,8 +1,10 @@
+'use strict';
 class Command {
   constructor(client, commandOptions) {
     this.name = commandOptions.name;
     this.permissions = commandOptions.permissions || null;
     this.guildOnly = commandOptions.guildOnly || false;
+    this.usage = commandOptions.usage || '';
 
     this.endpoint = process.env.API_ENDPOINT;
   }
@@ -14,12 +16,19 @@ class Command {
     if (!this.userHasPermissions(message)) {
       return message.reply('you do not have the required permission to execute this command.');
     }
+    if (!this.checkArgs(args)) {
+      return message.reply(`the usage of this command is: ${message.prefix} ${this.usage}`);
+    }
 
     // dopo tutti i controlli...
     return this.run(message, args);
   }
 
   async run(message, args) {}
+
+  checkArgs(args) {
+    return true;
+  }
 
   checkRightChannel(message) {
     if (this.guildOnly) {

@@ -1,9 +1,10 @@
-const {client, userDB} = require('./redisManager');
+'use strict';
+const {client, user} = require('./redisManager');
 
 class Session {
   constructor() {
     this.client = client;
-    this.db = userDB;
+    this.db = user;
   }
 
   async create(userId, value) {

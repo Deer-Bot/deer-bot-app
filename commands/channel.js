@@ -7,6 +7,7 @@ class ChannelCommand extends Command {
       name: 'channel',
       permissions: ['ADMINISTRATOR'],
       guildOnly: true,
+      usage: 'channel [channel name](optional)',
       // TODO: other command options
     });
   }
@@ -25,7 +26,7 @@ class ChannelCommand extends Command {
     }
 
     try {
-      const res = await axios.post(`${this.endpoint}setChannel`, {guild: message.guild.id, channel: channelId});
+      const res = await axios.post(`${this.endpoint}setGuild`, {guild: message.guild.id, channel: channelId});
       if (res.status === 200) {
         message.reply('all set.');
       } else {
@@ -35,6 +36,10 @@ class ChannelCommand extends Command {
       this.sendError(message);
     }
     return;
+  }
+
+  checkArgs(args) {
+    return args.length < 2;
   }
 }
 

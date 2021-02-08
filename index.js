@@ -1,8 +1,12 @@
+'use strict';
+
 require('dotenv').config();
+const axios = require('axios');
+axios.defaults.baseUrl = process.env.API_ENDPOINT;
 const fs = require('fs');
 const Discord = require('discord.js');
 const client = new Discord.Client();
-const defaultPrefix = '!';
+const Prefix = require('./cache/prefix.js');
 
 loadCommands(client);
 
@@ -11,12 +15,19 @@ client.on('ready', () => {
 });
 
 client.on('message', async (message) => {
-  if (message.channel.type !== 'dm' && message.channel.type !== 'text') {
+  if (message.author.bot || (message.channel.type !== 'dm' && message.channel.type !== 'text')) {
     return;
   }
+  // Prefix del server o quello di default
+  let prefix;
+  try {
+    prefix = await Prefix.get(message.guild?.id);
+  } catch (err) {
+    console.log(err);
+  }
 
-  // prendere il prefisso della guild (e metterlo in cache)
-  if (!message.content.startsWith(defaultPrefix) || message.author.bot) {
+  message.prefix = prefix || Prefix.defaultPrefix;
+  if (!message.content.startsWith(message.prefix)) {
     return;
   }
 
@@ -26,13 +37,14 @@ client.on('message', async (message) => {
     return;
   }
 
-  client.commands.get(commandName).execute(message, args);
+  client.commands.get(commandName).execute(message, args)
+      .catch((err) => console.log(err));
 });
 
 client.login(process.env.DISCORD_TOKEN);
 
 function getCommand(message) {
-  const args = message.content.slice(defaultPrefix.length).trim().split(/ +/);
+  const args = message.content.slice(message.prefix.length).trim().split(/ +/);
   const command = args.shift().toLowerCase();
   return {commandName: command, args: args};
 }
