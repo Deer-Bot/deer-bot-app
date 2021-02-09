@@ -1,7 +1,7 @@
 'use strict';
-const redis = require('redis');
-const bluebird = require('bluebird');
-const RedisDb = require('./db.js');
+import redis, { RedisClient } from 'redis';
+import bluebird from 'bluebird';
+import RedisDb from './db.js'
 
 // Convert Redis client API to use promises, to make it usable with async/await syntax
 // bluebird.promisifyAll(redis.RedisClient.prototype);
@@ -9,7 +9,7 @@ const RedisDb = require('./db.js');
 
 const cacheConnection = redis.createClient({
   host: process.env.REDIS_HOSTNAME,
-  port: process.env.REDIS_PORT,
+  port: process.env.REDIS_PORT as any as number,
   password: process.env.REDIS_KEY,
 //  tls: {servername: process.env.REDIS_HOSTNAME}, // Understand
 });
@@ -22,17 +22,44 @@ cacheConnection.hmset = bluebird.promisify(cacheConnection.hmset).bind(cacheConn
 cacheConnection.select = bluebird.promisify(cacheConnection.select).bind(cacheConnection);
 cacheConnection.expire = bluebird.promisify(cacheConnection.expire).bind(cacheConnection);
 
+interface Databases {
+  [index: string]: RedisDb;
+}
 
-class RedisManager {
-  constructor() {
+declare module 'redis' {
+  interface Commands<R> {
+    set(key: string, value: string): Promise<'OK'>;
+  }
+
+  interface OverloadedSetCommand<T, U, R> {
+    (key: string, arg1: T | { [key: string]: T } | T[]): Promise<'OK'>
+  }
+}
+
+export default class RedisManager {
+  private client: RedisClient;
+  private db: Databases;
+  private static instance: RedisManager;
+  public static readonly User = 'user';
+  public static readonly Guild = 'guild';
+
+  private constructor() {
     this.client = cacheConnection;
     this.db = {
-      user: new RedisDb(0, 300, this.client.hgetall, this.client.hmset),
-      guild: new RedisDb(1, 3600, this.client.get, this.client.set),
+      user: new RedisDb(0, 300,  async (key) => this.client.hgetall(key), async (key, value) => this.client.hmset(key, value)),
+      guild: new RedisDb(1, 3600,  async (key) => this.client.get(key), async (key, value) => this.client.set(key, value)),
     };
   }
 
-  async set(key, value, dbName) {
+  public static getInstance(): RedisManager {
+    if (!RedisManager.instance) {
+      RedisManager.instance = new RedisManager();
+    }
+
+    return RedisManager.instance;
+}
+
+  async set(key: string, value: Object, dbName: string): Promise<boolean> {
     const db = this.db[dbName];
     if (db === undefined) {
       throw new Error('Redis database not found');
@@ -42,10 +69,11 @@ class RedisManager {
     const result = await db.set(key, value);
     await this.client.expire(key, db.ttl);
 
-    return result;
+
+    return result === 'OK';
   }
 
-  async get(key, dbName) {
+  async get(key: string, dbName: string): Promise<string | Object> {
     const db = this.db[dbName];
     if (db === undefined) {
       throw new Error('Redis database not found');
@@ -57,17 +85,5 @@ class RedisManager {
 
     return result;
   }
+
 }
-
-// Costruzione oggetto da esportare
-const staticClient = new RedisManager();
-const exportObj = {
-  client: staticClient,
-};
-
-const dbNames = Object.keys(staticClient.db);
-for (dbName of dbNames) {
-  exportObj[dbName] = dbName;
-}
-
-module.exports = exportObj;

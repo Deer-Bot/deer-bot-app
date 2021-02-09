@@ -1,8 +1,11 @@
-const Command = require('../base/command.js');
+'use strict';
+
+import { Client } from "discord.js";
+import Command from '../base/command.js';
 const axios = require('axios').default;
 
-class ChannelCommand extends Command {
-  constructor(client) {
+export default class ChannelCommand extends Command {
+  constructor(client: Client) {
     super(client, {
       name: 'channel',
       permissions: ['ADMINISTRATOR'],
@@ -12,14 +15,14 @@ class ChannelCommand extends Command {
     });
   }
 
-  async run(message, args) {
-    const channelId = message.channel.id;
+  protected async run(message: EnrichedMessage, args: string[]) {
+    let channelId = message.channel.id;
     if (args.length !== 0) {
       const channelIds = message.guild.channels.cache.filter((channel) => channel.name === args[0]);
-      if (channelIds.length === 0) {
+      if (channelIds.size === 0) {
         return message.reply('I could not find the channel you specified.');
       }
-      if (channelIds.length > 1) {
+      if (channelIds.size > 1) {
         return message.reply('there are too many channels with that name, use the command in the desired channel without any arguments.');
       }
       channelId = channelIds[0];
@@ -38,9 +41,7 @@ class ChannelCommand extends Command {
     return;
   }
 
-  checkArgs(args) {
+  protected checkArgs(args: string[]) {
     return args.length < 2;
   }
 }
-
-module.exports = ChannelCommand;

@@ -1,6 +1,22 @@
 'use strict';
-class Command {
-  constructor(client, commandOptions) {
+
+import { Client, PermissionResolvable } from "discord.js";
+
+interface CommandOptions {
+    name: string,
+    permissions?: PermissionResolvable[],
+    guildOnly?: boolean,
+    usage: string
+}
+
+export default class Command {
+  public name: string;
+  protected permissions: PermissionResolvable[];
+  protected guildOnly: boolean;
+  protected usage: string;
+  protected endpoint: string;
+
+  constructor(client: Client, commandOptions: CommandOptions) {
     this.name = commandOptions.name;
     this.permissions = commandOptions.permissions || null;
     this.guildOnly = commandOptions.guildOnly || false;
@@ -9,7 +25,7 @@ class Command {
     this.endpoint = process.env.API_ENDPOINT;
   }
 
-  async execute(message, args) {
+  public async execute(message: EnrichedMessage, args: string[]): Promise<any> {
     if (!this.checkRightChannel(message)) {
       return;
     }
@@ -17,42 +33,40 @@ class Command {
       return message.reply('you do not have the required permission to execute this command.');
     }
     if (!this.checkArgs(args)) {
-      return message.reply(`the usage of this command is: ${message.prefix} ${this.usage}`);
+      return message.reply(`the usage of this command is: ${message.prefix}${this.usage}`);
     }
 
     // dopo tutti i controlli...
     return this.run(message, args);
   }
 
-  async run(message, args) {}
+  protected async run(message: EnrichedMessage, args: string[]): Promise<any> {}
 
-  checkArgs(args) {
+  protected checkArgs(args: string[]): boolean {
     return true;
   }
 
-  checkRightChannel(message) {
+  protected checkRightChannel(message: EnrichedMessage): boolean {
     if (this.guildOnly) {
       return message.guild != undefined;
     }
     return true;
   }
 
-  userHasPermissions(message) {
+  protected userHasPermissions(message: EnrichedMessage): boolean {
     if (this.permissions == null || message.channel.type === 'dm') {
       return true;
     }
 
-    let permission = true;
+    let permission: boolean = true;
     for (let i = 0; i < this.permissions.length && permission; i++) {
       permission = permission && message.member.hasPermission(this.permissions[i]);
     }
     return permission;
   }
 
-  sendError(message) {
+  protected sendError(message: EnrichedMessage): void {
     message.reply('something went wrong while executing the command.');
     return;
   }
 }
-
-module.exports = Command;

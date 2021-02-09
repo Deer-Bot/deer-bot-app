@@ -1,22 +1,20 @@
 'use strict';
-const {client, guild} = require('./redisManager');
+import RedisManager from './redisManager';
 const axios = require('axios').default;
 const endpoint = process.env.API_ENDPOINT;
 
-class Prefix {
-  constructor() {
-    this.client = client;
-    this.db = guild;
-    this.defaultPrefix = '!';
-  }
+export default class Prefix {
+  private static client = RedisManager.getInstance();
+  private static db = RedisManager.Guild;
+  public static defaultPrefix = '!';
 
   // Get the prefix for the server from DB and store it into the redis cache
-  async get(key) {
+  static async get(key: string): Promise<string> {
     if (key == undefined) {
-      return this.defaultPrefix;
+      return Prefix.defaultPrefix;
     }
 
-    let prefix = await this.client.get(key, this.db);
+    let prefix = await Prefix.client.get(key, Prefix.db) as string;
     if (prefix == null) {
       // Lettura del prefix dal db
       try {
@@ -28,26 +26,26 @@ class Prefix {
         if (res.status === 200) {
           prefix = res.guild.prefix;
         } else {
-          prefix = this.defaultPrefix;
+          prefix = Prefix.defaultPrefix;
         }
       } catch (err) {
         console.log(err);
       }
     }
     // Set nella cache
-    await this.client.set(key, prefix, this.db);
+    await Prefix.client.set(key, prefix, Prefix.db);
 
     return prefix;
   }
 
   // Save the prefix into the DB and update the cache
-  async set(key, value) {
+  static async set(key: string, value: string): Promise<boolean> {
     // Salva il prefix nel db
     try {
       const res = await axios.post(`${endpoint}setGuild`, {guild: key, prefix: value});
       if (res.status === 200) {
         // Aggiorna il prefix nella cache
-        return this.client.set(key, value, this.db);
+        return Prefix.client.set(key, value, Prefix.db);
       }
     } catch (err) {
       console.log(err);
@@ -56,7 +54,3 @@ class Prefix {
     return false;
   }
 }
-
-const prefix = new Prefix();
-
-module.exports = prefix;
