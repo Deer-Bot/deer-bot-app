@@ -2,7 +2,7 @@
 
 import {Client} from 'discord.js';
 import Command from '../base/command.js';
-const axios = require('axios').default;
+import ApiClient from '../api/api-client';
 
 export default class ChannelCommand extends Command {
   constructor(client: Client) {
@@ -27,18 +27,9 @@ export default class ChannelCommand extends Command {
       }
       channelId = channelIds.first().id;
     }
+    await ApiClient.post(`setGuild`, {guild: message.guild.id, channel: channelId});
 
-    try {
-      const res = await axios.post(`${this.endpoint}setGuild`, {guild: message.guild.id, channel: channelId});
-      if (res.status === 200) {
-        message.reply('all set.');
-      } else {
-        this.sendError(message);
-      }
-    } catch (err) {
-      this.sendError(message);
-    }
-    return;
+    return message.reply('all set.');
   }
 
   protected checkArgs(args: string[]) {

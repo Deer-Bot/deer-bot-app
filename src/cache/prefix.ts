@@ -1,7 +1,6 @@
 'use strict';
-import RedisManager from './redisManager';
-const axios = require('axios').default;
-const endpoint = process.env.API_ENDPOINT;
+import RedisManager from './redis-manager';
+import ApiClient from '../api/api-client';
 
 export default class Prefix {
   private static client = RedisManager.getInstance();
@@ -17,20 +16,8 @@ export default class Prefix {
     let prefix = await Prefix.client.get(key, Prefix.db) as string;
     if (prefix == null) {
       // Lettura del prefix dal db
-      try {
-        const res = await axios.get(`${endpoint}getGuild`, {
-          params: {
-            guild: key,
-          },
-        });
-        if (res.status === 200) {
-          prefix = res.data.guild.prefix;
-        } else {
-          prefix = Prefix.defaultPrefix;
-        }
-      } catch (err) {
-        console.log(err);
-      }
+      const data = await ApiClient.get('getGuild', {guild: key});
+      prefix = data.guild?.prefix || Prefix.defaultPrefix;
     }
     // Set nella cache
     await Prefix.client.set(key, prefix, Prefix.db);
@@ -39,18 +26,9 @@ export default class Prefix {
   }
 
   // Save the prefix into the DB and update the cache
-  static async set(key: string, value: string): Promise<boolean> {
+  static async set(key: string, value: string): Promise<void> {
     // Salva il prefix nel db
-    try {
-      const res = await axios.post(`${endpoint}setGuild`, {guild: key, prefix: value});
-      if (res.status === 200) {
-        // Aggiorna il prefix nella cache
-        return Prefix.client.set(key, value, Prefix.db);
-      }
-    } catch (err) {
-      console.log(err);
-    }
-
-    return false;
+    await ApiClient.post(`setGuild`, {guild: key, prefix: value});
+    await Prefix.client.set(key, value, Prefix.db);
   }
 }

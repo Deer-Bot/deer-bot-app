@@ -5,18 +5,36 @@ import fs from 'fs';
 import path from 'path';
 import Discord from 'discord.js';
 import Prefix from './cache/prefix.js';
+import Session from './cache/session';
+import DialogHandler from './base/dialog-handler';
+
 const client = new Discord.Client() as EnrichedClient;
+
 
 loadCommands(client);
 
 client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}!`);
+  client.dialogs = new DialogHandler(path.resolve(__dirname, 'dialogs'));
 });
 
 client.on('message', async (message: EnrichedMessage) => {
   if (message.author.bot || (message.channel.type !== 'dm' && message.channel.type !== 'text')) {
     return;
   }
+
+  if (message.channel.type == 'dm') {
+    const conversation = await Session.get(message.author.id);
+    if (conversation != null) {
+      client.dialogs.continue(message, conversation)
+          .catch((err: any) => {
+            message.reply('something went wrong during the conversation.');
+            console.log(err);
+          });
+      return;
+    }
+  }
+
   // Prefix del server o quello di default
   let prefix: string;
   try {

@@ -2,6 +2,7 @@
 import redis, {RedisClient} from 'redis';
 import bluebird from 'bluebird';
 import RedisDb from './db.js';
+import {UserConversation} from './session.js';
 
 // Convert Redis client API to use promises, to make it usable with async/await syntax
 // bluebird.promisifyAll(redis.RedisClient.prototype);
@@ -31,7 +32,7 @@ declare module 'redis' {
   interface Commands<R> {
     set(key: string, value: string): Promise<'OK'>;
     get(key: string): Promise<string>;
-    hgetall(key: string): Promise<Object>;
+    hgetall(key: string): Promise<UserConversation>;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -77,7 +78,7 @@ export default class RedisManager {
     return result === 'OK';
   }
 
-  async get(key: string, dbName: string): Promise<string | Object> {
+  async get(key: string, dbName: string): Promise<string | UserConversation> {
     const db = this.db[dbName];
     if (db === undefined) {
       throw new Error('Redis database not found');

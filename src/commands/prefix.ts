@@ -17,12 +17,9 @@ export default class PrefixCommand extends Command {
 
   protected async run(message: EnrichedMessage, args: string[]) {
     // Salva il nuovo prefisso
-    const result = await Prefix.set(message.guild.id, args[0]);
-    if (result) {
-      return message.reply(`your new prefix is ${args[0]}`);
-    }
+    await Prefix.set(message.guild.id, args[0]);
 
-    return this.sendError(message);
+    return message.reply(`your new prefix is ${args[0]}`);
   }
 
   protected checkArgs(args: string[]) {
