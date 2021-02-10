@@ -1,7 +1,7 @@
 'use strict';
-import redis, { RedisClient } from 'redis';
+import redis, {RedisClient} from 'redis';
 import bluebird from 'bluebird';
-import RedisDb from './db.js'
+import RedisDb from './db.js';
 
 // Convert Redis client API to use promises, to make it usable with async/await syntax
 // bluebird.promisifyAll(redis.RedisClient.prototype);
@@ -27,10 +27,14 @@ interface Databases {
 }
 
 declare module 'redis' {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   interface Commands<R> {
     set(key: string, value: string): Promise<'OK'>;
+    get(key: string): Promise<string>;
+    hgetall(key: string): Promise<Object>;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   interface OverloadedSetCommand<T, U, R> {
     (key: string, arg1: T | { [key: string]: T } | T[]): Promise<'OK'>
   }
@@ -46,8 +50,8 @@ export default class RedisManager {
   private constructor() {
     this.client = cacheConnection;
     this.db = {
-      user: new RedisDb(0, 300,  async (key) => this.client.hgetall(key), async (key, value) => this.client.hmset(key, value)),
-      guild: new RedisDb(1, 3600,  async (key) => this.client.get(key), async (key, value) => this.client.set(key, value)),
+      user: new RedisDb(0, 300, this.client.hgetall, this.client.hmset),
+      guild: new RedisDb(1, 3600, this.client.get, this.client.set),
     };
   }
 
@@ -57,7 +61,7 @@ export default class RedisManager {
     }
 
     return RedisManager.instance;
-}
+  }
 
   async set(key: string, value: Object, dbName: string): Promise<boolean> {
     const db = this.db[dbName];
@@ -85,5 +89,4 @@ export default class RedisManager {
 
     return result;
   }
-
 }

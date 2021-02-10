@@ -1,6 +1,6 @@
 'use strict';
 
-import { Client } from "discord.js";
+import {Client} from 'discord.js';
 import Command from '../base/command.js';
 import Prefix from '../cache/prefix';
 

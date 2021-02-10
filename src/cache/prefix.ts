@@ -24,7 +24,7 @@ export default class Prefix {
           },
         });
         if (res.status === 200) {
-          prefix = res.guild.prefix;
+          prefix = res.data.guild.prefix;
         } else {
           prefix = Prefix.defaultPrefix;
         }

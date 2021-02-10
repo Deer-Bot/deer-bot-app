@@ -1,8 +1,8 @@
-import { Client, Collection, Message } from "discord.js";
-import Command from "../base/command";
+import {Client, Collection, Message} from 'discord.js';
+import Command from '../base/command';
 
 declare global {
-  export interface  EnrichedMessage extends Message {
+  export interface EnrichedMessage extends Message {
     prefix?: string;
   }
 

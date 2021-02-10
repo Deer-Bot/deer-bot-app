@@ -1,6 +1,6 @@
 'use strict';
 
-import { Client } from "discord.js";
+import {Client} from 'discord.js';
 import Command from '../base/command.js';
 const axios = require('axios').default;
 
@@ -25,7 +25,7 @@ export default class ChannelCommand extends Command {
       if (channelIds.size > 1) {
         return message.reply('there are too many channels with that name, use the command in the desired channel without any arguments.');
       }
-      channelId = channelIds[0];
+      channelId = channelIds.first().id;
     }
 
     try {

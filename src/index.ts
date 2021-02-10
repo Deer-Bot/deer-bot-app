@@ -37,7 +37,10 @@ client.on('message', async (message: EnrichedMessage) => {
   }
 
   client.commands.get(commandName).execute(message, args)
-      .catch((err: any) => console.log(err));
+      .catch((err: any) => {
+        message.reply('something went wrong while executing the command.');
+        console.log(err);
+      });
 });
 
 client.login(process.env.DISCORD_TOKEN);
@@ -54,8 +57,8 @@ function loadCommands(client: EnrichedClient) {
   let commandFileNames = fs.readdirSync(path.resolve(__dirname, 'commands'));
   commandFileNames = commandFileNames.filter((name) => name.endsWith('.js'));
   for (const name of commandFileNames) {
-    const cmd = require(`./commands/${name}`).default;
-    const command = new cmd();
+    const Cmd = require(`./commands/${name}`).default;
+    const command = new Cmd();
     client.commands.set(command.name, command);
   }
 }

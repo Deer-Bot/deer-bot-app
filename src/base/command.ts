@@ -1,6 +1,6 @@
 'use strict';
 
-import { Client, PermissionResolvable } from "discord.js";
+import {Client, PermissionResolvable} from 'discord.js';
 
 interface CommandOptions {
     name: string,
@@ -9,7 +9,7 @@ interface CommandOptions {
     usage: string
 }
 
-export default class Command {
+export default abstract class Command {
   public name: string;
   protected permissions: PermissionResolvable[];
   protected guildOnly: boolean;
@@ -40,7 +40,7 @@ export default class Command {
     return this.run(message, args);
   }
 
-  protected async run(message: EnrichedMessage, args: string[]): Promise<any> {}
+  protected abstract run(message: EnrichedMessage, args: string[]): Promise<any>;
 
   protected checkArgs(args: string[]): boolean {
     return true;

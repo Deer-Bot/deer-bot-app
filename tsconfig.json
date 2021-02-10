@@ -2,10 +2,9 @@
   "compilerOptions": {
       "module": "commonjs",
       "esModuleInterop": true,
-      "allowJs": true,
       "allowSyntheticDefaultImports": true,
       "target": "es6",
-      "noImplicitAny": false,
+      "noImplicitAny": true,
       "moduleResolution": "node",
       "sourceMap": true,
       "outDir": "dist",
