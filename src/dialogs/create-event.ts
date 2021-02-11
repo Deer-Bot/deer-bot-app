@@ -14,6 +14,9 @@ export default class CreateEventDialog extends Dialog {
   async run(message: EnrichedMessage, conversation: UserConversation): Promise<void> {
     let now: Date;
     let inputDate: Date;
+    let day: number;
+    let month: number;
+    let year: number;
 
     switch (conversation.step) {
       case 0:
@@ -33,7 +36,7 @@ export default class CreateEventDialog extends Dialog {
           await message.author.send('Date format must be dd-mm-yyyy.');
           break;
         }
-        let [day, month, year] = (conversation.event.date as string).split('-').map((value) => Number.parseInt(value));
+        [day, month, year] = date.split('-').map((value) => Number.parseInt(value));
 
         now = new Date(Date.now());
         now = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0);
@@ -97,6 +100,9 @@ export default class CreateEventDialog extends Dialog {
         conversation.event.privateReminder = min;
         const messageEmbed = await MessageDecorator.newEventMessage(message.client, conversation.event, true);
         await message.author.send(messageEmbed);
+        break;
+      case 6:
+        // TODO call function app
         break;
     }
     conversation.step += 1;
