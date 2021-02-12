@@ -17,7 +17,7 @@ export default class MessageDecorator {
     if (isAuthor) {
       embed.addFields(
           {name: 'Server reminder', value: `Every ${event.globalReminder} day(s)`, inline: true},
-          {name: 'Private reminder', value: `${event.privateReminder} hour(s) before the event`, inline: true},
+          {name: 'Private reminder', value: `${Math.floor(event.privateReminder / 60)}:${event.privateReminder % 60} hour(s) before the event`, inline: true},
       );
     }
 

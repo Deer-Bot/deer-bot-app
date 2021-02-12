@@ -2,8 +2,8 @@
 
 import {Client} from 'discord.js';
 import Command from '../base/command.js';
-import Session, {UserConversation} from '../cache/session';
 import ApiClient from '../api/api-client';
+import CreateEventDialog from '../dialogs/create-event.js';
 
 export default class CreateEventCommand extends Command {
   constructor(client: Client) {
@@ -21,18 +21,8 @@ export default class CreateEventCommand extends Command {
     if (guild == null || guild.channel == undefined) {
       return message.reply('you must set a default channel before creating an event, use `channel` command.');
     }
-    const conversation: UserConversation = {
-      type: 'create',
-      step: 0,
-      event: {
-        guild: guild.guild,
-        author: message.author.id,
-      },
-    };
-    await Session.create(message.author.id, conversation);
-    message.author.send('Type a name for your event');
 
-    return message.reply('check your DMs.');
+    return CreateEventDialog.start(message, guild.guild);
   }
 
   protected checkArgs(args: string[]) {

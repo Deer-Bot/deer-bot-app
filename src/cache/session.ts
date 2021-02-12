@@ -8,13 +8,14 @@ export interface Event {
   description?: string,
   date?: string | Date,
   globalReminder?: number,
-  privateReminder?: number
+  privateReminder?: number,
 }
 
 export interface UserConversation {
   type: 'create' | 'update' | 'delete',
   step: number,
   event?: Event,
+  messageId?: string
 }
 
 export default class Session {

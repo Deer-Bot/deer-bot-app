@@ -61,6 +61,27 @@ client.on('message', async (message: EnrichedMessage) => {
       });
 });
 
+client.on('messageReactionAdd', async (messageReaction, user) => {
+  if (user.bot) {
+    return;
+  }
+
+  const message: EnrichedMessage = messageReaction.message;
+  message.reaction = messageReaction.emoji;
+
+  if (message.channel.type == 'dm') {
+    const conversation = await Session.get(message.author.id);
+    if (conversation != null && message.id === conversation.messageId) {
+      client.dialogs.continue(message, conversation)
+          .catch((err: any) => {
+            message.reply('something went wrong during the conversation.');
+            console.log(err);
+          });
+      return;
+    }
+  }
+});
+
 client.login(process.env.DISCORD_TOKEN);
 
 function getCommand(message: EnrichedMessage) {
