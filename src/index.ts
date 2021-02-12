@@ -70,7 +70,7 @@ client.on('messageReactionAdd', async (messageReaction, user) => {
   message.reaction = messageReaction.emoji;
 
   if (message.channel.type == 'dm') {
-    const conversation = await Session.get(message.author.id);
+    const conversation = await Session.get(user.id);
     if (conversation != null && message.id === conversation.messageId) {
       client.dialogs.continue(message, conversation)
           .catch((err: any) => {

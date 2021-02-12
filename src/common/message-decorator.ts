@@ -5,19 +5,21 @@ export default class MessageDecorator {
   public static async newEventMessage(client: Discord.Client, event: Event, isAuthor: boolean): Promise<Discord.MessageEmbed> {
     const guild = await client.guilds.fetch(event.guild);
     const member = await guild.members.fetch(event.author);
+    const minutes = event.privateReminder % 60;
+    const zero = minutes < 10 ? '0' : '';
 
     const embed = new Discord.MessageEmbed();
     embed.setTitle(event.name)
         .setDescription(event.description)
         .setAuthor(member.displayName, member.user.displayAvatarURL())
-        .addField('Date', event.date)
+        .addField('Date', event.date.toLocaleString())
         .setColor('#FFD700')
         .setTimestamp();
 
     if (isAuthor) {
       embed.addFields(
           {name: 'Server reminder', value: `Every ${event.globalReminder} day(s)`, inline: true},
-          {name: 'Private reminder', value: `${Math.floor(event.privateReminder / 60)}:${event.privateReminder % 60} hour(s) before the event`, inline: true},
+          {name: 'Private reminder', value: `${Math.floor(event.privateReminder / 60)}:${zero}${minutes} hour(s) before the event`, inline: true},
       );
     }
 

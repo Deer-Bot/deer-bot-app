@@ -2,13 +2,16 @@
 import RedisManager from './redis-manager';
 
 export interface Event {
+  id?: string,
   author: string,
   guild: string,
   name?: string,
   description?: string,
-  date?: string | Date,
+  date?: Date | string,
   globalReminder?: number,
   privateReminder?: number,
+  globalReminderDate?: Date | string,
+  privateReminderDate?: Date | string,
 }
 
 export interface UserConversation {

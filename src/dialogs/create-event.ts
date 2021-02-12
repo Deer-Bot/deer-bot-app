@@ -1,3 +1,5 @@
+import {TextChannel} from 'discord.js';
+import ApiClient from '../api/api-client';
 import Dialog from '../base/dialog';
 import Session, {UserConversation} from '../cache/session';
 import MessageDecorator from '../common/message-decorator';
@@ -103,9 +105,9 @@ export default class CreateEventDialog extends Dialog {
         // TODO controllare e finire la raccolta dati sui reminder e fare un nuovo case di conferma (vedere come fare)
         const globalReminder = trimmedMessage;
         const globalReminderInt = Number.parseInt(globalReminder);
-        if (!globalReminder.match(numberRegex) || globalReminderInt == NaN) {
+        if (!globalReminder.match(numberRegex) || globalReminderInt == NaN || globalReminderInt <= 0) {
           conversation.step -= 1;
-          await message.author.send('It must be a number');
+          await message.author.send('It must be a positive number');
           break;
         }
         conversation.event.globalReminder = globalReminderInt;
@@ -133,6 +135,15 @@ export default class CreateEventDialog extends Dialog {
       case 6:
         if (message.reaction.toString() === checkEmoji) {
           // chiamare la funzione e pubblicare il messaggio
+          await ApiClient.post('setEvent', {user: conversation.event.author});
+          // Get default channel and publish event
+          const {guild} = await ApiClient.get('getGuild', {guild: conversation.event.guild});
+          const targetGuild = await message.client.guilds.fetch(guild.guild);
+          const targetChannel = await targetGuild.channels.cache.get(guild.channel);
+          const publicEventMessage = await MessageDecorator.newEventMessage(message.client, conversation.event, false);
+
+          await (targetChannel as TextChannel).send(publicEventMessage); // Potremmo aggiungere le reazioni al messaggio
+          await message.channel.send('OK');
         } else if (message.reaction.toString() === crossEmoji) {
           // chiamare la modifica dell'evento
         } else {

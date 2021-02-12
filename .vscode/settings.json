@@ -1,3 +1,4 @@
 {
-  "eslint.lintTask.options": "./src"
+  "eslint.lintTask.options": "./src",
+  "editor.tabSize": 2
 }
