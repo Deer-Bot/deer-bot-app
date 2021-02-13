@@ -10,8 +10,8 @@ export default class MessageDecorator {
     const guild = await client.guilds.fetch(event.guild);
     const member = await guild.members.fetch(event.author);
     const minutes = event.privateReminder % 60;
-    const date = event.date as Date;
-    const dateString = [pads(date.getDate()), pads(date.getMonth()), pads(date.getFullYear())].join('-');
+    const date = new Date(event.date);
+    const dateString = [pads(date.getDate()), pads(date.getMonth() + 1), pads(date.getFullYear())].join('-');
 
     const embed = new Discord.MessageEmbed();
     embed.setTitle(event.name)
