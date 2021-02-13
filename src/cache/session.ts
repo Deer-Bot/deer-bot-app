@@ -17,8 +17,10 @@ export interface Event {
 export interface UserConversation {
   type: 'create' | 'update' | 'delete',
   step: number,
-  event?: Event,
-  messageId?: string
+  messageId?: string,
+  offset?: number,
+  hasNext?: boolean,
+  events?: Event[],
 }
 
 export default class Session {
@@ -26,7 +28,10 @@ export default class Session {
   private static db = RedisManager.User;
 
   static async create(userId: string, value: UserConversation): Promise<void> {
-    value.event = JSON.stringify(value.event) as any;
+    if (value.events) {
+      value.events = JSON.stringify(value.events) as any;
+    }
+
     const result = await Session.client.set(userId, value, Session.db);
     if (result != true) {
       throw new Error('Could not write to Redis cache');
@@ -36,7 +41,12 @@ export default class Session {
   static async get(userId: string): Promise<UserConversation> {
     const conversation = await Session.client.get(userId, Session.db) as UserConversation;
     if (conversation != null) {
-      conversation.event = JSON.parse(conversation.event as any as string);
+      if (conversation.events) {
+        conversation.events = JSON.parse(conversation.events as any as string);
+      }
+      if (conversation.offset) {
+        conversation.offset = +conversation.offset;
+      }
       conversation.step = +conversation.step; // To convert string to number
     }
 
@@ -44,7 +54,10 @@ export default class Session {
   }
 
   static async update(userId: string, value: UserConversation): Promise<void> {
-    value.event = JSON.stringify(value.event) as any;
+    if (value.events) {
+      value.events = JSON.stringify(value.events) as any;
+    }
+
     const result = await Session.client.set(userId, value, Session.db);
     if (result != true) {
       throw new Error('Could not write to Redis cache');

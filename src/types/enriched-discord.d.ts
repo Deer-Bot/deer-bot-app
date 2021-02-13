@@ -1,6 +1,6 @@
-import {Client, Collection, EmojiResolvable, Message} from 'discord.js';
+import {Client, EmojiResolvable, Message} from 'discord.js';
 import DialogHandler from '../base/dialog-handler';
-import Command from '../base/command';
+import CommandHandler from '../base/command-handler';
 
 declare global {
   export interface EnrichedMessage extends Message {
@@ -9,7 +9,7 @@ declare global {
   }
 
   export interface EnrichedClient extends Client {
-    commands?: Collection<string, Command>;
+    commands?: CommandHandler;
     dialogs?: DialogHandler;
   }
 }

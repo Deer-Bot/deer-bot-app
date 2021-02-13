@@ -18,10 +18,12 @@ export default class CreateEventDialog extends Dialog {
     const conversation: UserConversation = {
       type: 'create',
       step: 0,
-      event: {
-        guild: guildId,
-        author: message.author.id,
-      },
+      events: [
+        {
+          guild: guildId,
+          author: message.author.id,
+        },
+      ],
     };
     await Session.create(message.author.id, conversation);
     await message.author.send('Type a name for your event');
@@ -35,13 +37,11 @@ export default class CreateEventDialog extends Dialog {
     let month: number;
     let year: number;
 
-    const checkEmoji = '✅';
-    const crossEmoji = '❎';
-
     const trimmedMessage = message.content.trim();
+    const event = conversation.events[0];
     switch (conversation.step) {
       case 0:
-        conversation.event.name = trimmedMessage;
+        event.name = trimmedMessage;
         await message.author.send('Type a description for your event');
         break;
 
@@ -51,7 +51,7 @@ export default class CreateEventDialog extends Dialog {
           await message.author.send('Please type a shorter description');
           break;
         }
-        conversation.event.description = trimmedMessage;
+        event.description = trimmedMessage;
         await message.author.send('Type a date for your event (dd-mm-yyyy)');
         break;
 
@@ -74,7 +74,7 @@ export default class CreateEventDialog extends Dialog {
           break;
         }
 
-        conversation.event.date = date;
+        event.date = date;
         await message.author.send('Type the time (hh:mm)');
         break;
 
@@ -85,7 +85,7 @@ export default class CreateEventDialog extends Dialog {
           await message.author.send('Time format must be hh:mm');
           break;
         }
-        [day, month, year] = (conversation.event.date as string).split('-').map((value) => Number.parseInt(value));
+        [day, month, year] = (event.date as string).split('-').map((value) => Number.parseInt(value));
         const [hours, minutes] = time.split(':').map((value) => Number.parseInt(value));
 
         now = new Date(Date.now());
@@ -97,7 +97,7 @@ export default class CreateEventDialog extends Dialog {
           break;
         }
 
-        conversation.event.date = inputDate;
+        event.date = inputDate;
         await message.author.send('How often (in days) should I remind about your event in the server channel?');
         break;
 
@@ -110,7 +110,7 @@ export default class CreateEventDialog extends Dialog {
           await message.author.send('It must be a positive number');
           break;
         }
-        conversation.event.globalReminder = globalReminderInt;
+        event.globalReminder = globalReminderInt;
         await message.author.send('How many hours before your event should I notify the participants? (hh:mm)');
         break;
 
@@ -123,33 +123,48 @@ export default class CreateEventDialog extends Dialog {
         }
         const [hours_, minutes_] = privateReminder.split(':');
         const min: number = (+hours_) * 60 + (+minutes_);
-        conversation.event.privateReminder = min;
-        const messageEmbed = await MessageDecorator.newEventMessage(message.client, conversation.event, true);
-        await message.author.send(messageEmbed);
-        const confirmMessage = await message.author.send(`Select ${checkEmoji} to confirm and publish or ${crossEmoji} to change something.`);
-        await confirmMessage.react(checkEmoji);
-        await confirmMessage.react(crossEmoji);
+        event.privateReminder = min;
+        const messageEmbed = await MessageDecorator.eventEmbed(message.client, event, true);
+        const confirmMessage = await message.author.send(`Select the ${MessageDecorator.confirmEmoji} reaction to confirm and publish or the ${MessageDecorator.editEmoji} reaction to make some changes.`, messageEmbed);
+        await confirmMessage.react(MessageDecorator.confirmEmoji);
+        await confirmMessage.react(MessageDecorator.editEmoji);
+        await confirmMessage.react(MessageDecorator.deleteEmoji);
         conversation.messageId = confirmMessage.id;
         break;
 
       case 6:
-        if (message.reaction.toString() === checkEmoji) {
+        if (message.reaction.toString() === MessageDecorator.confirmEmoji) {
           // chiamare la funzione e pubblicare il messaggio
-          await ApiClient.post('setEvent', {user: conversation.event.author});
+          await ApiClient.post('setEvent', {user: event.author});
           // Get default channel and publish event
-          const {guild} = await ApiClient.get('getGuild', {guild: conversation.event.guild});
+          const {guild} = await ApiClient.get('getGuild', {guild: event.guild});
           const targetGuild = await message.client.guilds.fetch(guild.guild);
           const targetChannel = await targetGuild.channels.cache.get(guild.channel);
-          const publicEventMessage = await MessageDecorator.newEventMessage(message.client, conversation.event, false);
+          const publicEventMessage = await MessageDecorator.eventEmbed(message.client, event, false);
 
-          await (targetChannel as TextChannel).send(publicEventMessage); // Potremmo aggiungere le reazioni al messaggio
+          await (targetChannel as TextChannel).send(publicEventMessage);
           await message.channel.send('OK');
-        } else if (message.reaction.toString() === crossEmoji) {
-          // chiamare la modifica dell'evento
+        } else if (message.reaction.toString() === MessageDecorator.editEmoji) {
+          // Modifica dell'evento
+          const embed = MessageDecorator.updateEventEmbed();
+          const updateMessage = await message.channel.send(embed);
+          for (const emoji of MessageDecorator.fieldsEmoji) {
+            updateMessage.react(emoji);
+          }
+          conversation.messageId = updateMessage.id;
+          conversation.step = 0; // this will become 1
+          conversation.type = 'update';
         } else {
           conversation.step -= 1;
         }
     }
     conversation.step += 1;
+  }
+
+  messageBelongToDialog(message: EnrichedMessage, conversation: UserConversation): boolean {
+    if (conversation.step < 6) {
+      return true;
+    }
+    return false;
   }
 }

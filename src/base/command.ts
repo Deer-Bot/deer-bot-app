@@ -6,6 +6,7 @@ interface CommandOptions {
     name: string,
     permissions?: PermissionResolvable[],
     guildOnly?: boolean,
+    dmOnly?: boolean,
     usage: string
 }
 
@@ -13,6 +14,7 @@ export default abstract class Command {
   public name: string;
   protected permissions: PermissionResolvable[];
   protected guildOnly: boolean;
+  protected dmOnly: boolean;
   protected usage: string;
   protected endpoint: string;
 
@@ -20,6 +22,7 @@ export default abstract class Command {
     this.name = commandOptions.name;
     this.permissions = commandOptions.permissions || null;
     this.guildOnly = commandOptions.guildOnly || false;
+    this.dmOnly = commandOptions.dmOnly || false;
     this.usage = commandOptions.usage || '';
 
     this.endpoint = process.env.API_ENDPOINT;
@@ -49,6 +52,9 @@ export default abstract class Command {
   protected checkRightChannel(message: EnrichedMessage): boolean {
     if (this.guildOnly) {
       return message.guild != undefined;
+    }
+    if (this.dmOnly) {
+      return message.channel.type === 'dm';
     }
     return true;
   }

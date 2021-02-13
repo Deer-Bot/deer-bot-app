@@ -24,6 +24,11 @@ export default class DialogHandler {
     }
   }
 
+  public expect(message: EnrichedMessage, conversation: UserConversation): boolean {
+    const type = conversation.type;
+    return this.dialogs.get(type).messageBelongToDialog(message, conversation);
+  }
+
   public async continue(message: EnrichedMessage, conversation: UserConversation) {
     const type = conversation.type;
     await this.dialogs.get(type).run(message, conversation);
