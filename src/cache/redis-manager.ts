@@ -22,6 +22,7 @@ cacheConnection.hgetall = bluebird.promisify(cacheConnection.hgetall).bind(cache
 cacheConnection.hmset = bluebird.promisify(cacheConnection.hmset).bind(cacheConnection);
 cacheConnection.select = bluebird.promisify(cacheConnection.select).bind(cacheConnection);
 cacheConnection.expire = bluebird.promisify(cacheConnection.expire).bind(cacheConnection);
+cacheConnection.del = bluebird.promisify(cacheConnection.del).bind(cacheConnection);
 
 interface Databases {
   [index: string]: RedisDb;
@@ -39,6 +40,11 @@ declare module 'redis' {
   interface OverloadedSetCommand<T, U, R> {
     (key: string, arg1: T | { [key: string]: T } | T[]): Promise<'OK'>
   }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  interface OverloadedCommand<T, U, R> {
+    (arg1: T | T[]): Promise<U>;
+  }
 }
 
 export default class RedisManager {
@@ -51,8 +57,8 @@ export default class RedisManager {
   private constructor() {
     this.client = cacheConnection;
     this.db = {
-      user: new RedisDb(0, 300, this.client.hgetall, this.client.hmset),
-      guild: new RedisDb(1, 3600, this.client.get, this.client.set),
+      user: new RedisDb(0, 300, this.client.hgetall, this.client.hmset, this.client.del),
+      guild: new RedisDb(1, 3600, this.client.get, this.client.set, this.client.del),
     };
   }
 
@@ -89,5 +95,17 @@ export default class RedisManager {
     await this.client.expire(key, db.ttl);
 
     return result;
+  }
+
+  async del(key: string, dbName: string): Promise<boolean> {
+    const db = this.db[dbName];
+    if (db === undefined) {
+      throw new Error('Redis database not found');
+    }
+
+    await this.client.select(db.index);
+    const result = await cacheConnection.del(key); // Non cancella dalla sessione non so perché 😅
+
+    return result === 1;
   }
 }

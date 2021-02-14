@@ -47,6 +47,10 @@ export default class Session {
       if (conversation.offset) {
         conversation.offset = +conversation.offset;
       }
+      if (conversation.hasNext) {
+        conversation.hasNext = conversation.hasNext as any === 'true';
+      }
+
       conversation.step = +conversation.step; // To convert string to number
     }
 
@@ -60,6 +64,13 @@ export default class Session {
     const result = await Session.client.set(userId, value, Session.db);
     if (result != true) {
       throw new Error('Could not write to Redis cache');
+    }
+  }
+
+  static async delete(userId: string): Promise<void> {
+    const result = await Session.client.del(userId, Session.db);
+    if (result != true) {
+      throw new Error('Could not delete from Redis cache');
     }
   }
 }

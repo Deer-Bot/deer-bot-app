@@ -27,4 +27,12 @@ export default class ApiClient {
       throw new ApiError(`API responded with status code: ${res.status}`, res.status);
     }
   }
+
+  public static async delete(url: string, body?: {[index: string]: Object}): Promise<void> {
+    const res = await ApiClient.instance.delete(url, {data: body});
+
+    if (res.status !== 200) {
+      throw new ApiError(`API responded with status code: ${res.status}`, res.status);
+    }
+  }
 }

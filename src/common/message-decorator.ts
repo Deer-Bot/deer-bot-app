@@ -162,6 +162,10 @@ export default class MessageDecorator {
     return new MessageEmbed().setTitle('All set! 🦌').setColor(gold);
   }
 
+  public static removedEventMessage(): MessageEmbed {
+    return new MessageEmbed().setTitle('Event successfully removed! 🦌').setColor(gold);
+  }
+
   public static message(message: string): MessageEmbed {
     return new MessageEmbed().setDescription(message).setColor(gold);
   }

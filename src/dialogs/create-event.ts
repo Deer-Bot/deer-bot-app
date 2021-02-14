@@ -4,6 +4,7 @@ import ApiClient from '../api/api-client';
 import Dialog from '../base/dialog';
 import Session, {UserConversation} from '../cache/session';
 import MessageDecorator from '../common/message-decorator';
+import {Steps as UpdateSteps} from './update-event';
 
 enum Steps {
   EnterTitle = 0,
@@ -159,8 +160,13 @@ export default class CreateEventDialog extends Dialog {
             updateMessage.react(emoji);
           }
           conversation.messageId = updateMessage.id;
-          conversation.step = 1; // this will become 1
+          conversation.step = UpdateSteps.ChooseActions;
           conversation.type = 'update';
+        } else if (message.reaction.toString() === MessageDecorator.deleteEmoji) {
+          // Cancella evento (solo cache)
+          // TODO: capire perché non cancella dalla sessione
+          await Session.delete(event.author);
+          await message.channel.send(MessageDecorator.removedEventMessage());
         }
     }
   }
