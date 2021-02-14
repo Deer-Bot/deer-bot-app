@@ -57,7 +57,6 @@ export default class Session {
     if (value.events) {
       value.events = JSON.stringify(value.events) as any;
     }
-
     const result = await Session.client.set(userId, value, Session.db);
     if (result != true) {
       throw new Error('Could not write to Redis cache');

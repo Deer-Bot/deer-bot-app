@@ -1,4 +1,4 @@
-import {Collection} from 'discord.js';
+import {Collection, PartialUser, User} from 'discord.js';
 import fs from 'fs';
 import Session, {UserConversation} from '../cache/session';
 import Dialog from './dialog';
@@ -29,9 +29,9 @@ export default class DialogHandler {
     return this.dialogs.get(type).messageBelongToDialog(message, conversation);
   }
 
-  public async continue(message: EnrichedMessage, conversation: UserConversation) {
+  public async continue(message: EnrichedMessage, conversation: UserConversation, user: User | PartialUser) {
     const type = conversation.type;
     await this.dialogs.get(type).run(message, conversation);
-    await Session.update(message.author.id, conversation);
+    await Session.update(user.id, conversation);
   }
 }

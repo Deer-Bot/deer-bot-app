@@ -89,4 +89,76 @@ export default class MessageDecorator {
   public static noEventList(): MessageEmbed {
     return new MessageEmbed().setDescription('You don\'t have any events at the moment.').setColor('RED');
   }
+
+  public static inputTitle(): MessageEmbed {
+    return new MessageEmbed().setTitle('Type a title for your event').setColor(gold);
+  }
+
+  public static inputDescription(error?: boolean): MessageEmbed {
+    const msg = error ? 'Please type a shorter description' : 'Type a description for your event';
+
+    return new MessageEmbed().setTitle(msg).setColor(error ? 'RED' : gold);
+  }
+
+  public static inputDate(error?: 'patternError' | 'timeError'): MessageEmbed {
+    let msg ='Type a date for your event';
+    if (error == 'patternError') {
+      msg = 'Date format must be dd-mm-yyyy.';
+    } else if (error == 'timeError') {
+      msg = 'You cannot travel through time, choose a valid date.';
+    }
+
+    const embed = new MessageEmbed().setTitle(msg).setColor(error ? 'RED' : gold);
+    if (!error) {
+      embed.setDescription('Use the format dd-mm-yyyy');
+    }
+
+    return embed;
+  }
+
+  public static inputTime(error?: 'patternError' | 'timeError'): MessageEmbed {
+    let msg ='Type the time';
+    if (error == 'patternError') {
+      msg = 'Time format must be hh:mm.';
+    } else if (error == 'timeError') {
+      msg = 'You cannot travel through time, choose a valid time.';
+    }
+
+    const embed = new MessageEmbed().setTitle(msg).setColor(error ? 'RED' : gold);
+    if (!error) {
+      embed.setDescription('Use the format hh:mm');
+    }
+
+    return embed;
+  }
+
+  public static inputGlobalReminder(error?: 'patternError'): MessageEmbed {
+    const msg = error == 'patternError' ? 'It must be a positive number': 'How often (in days) should I remind about your event in the server channel?';
+
+    return new MessageEmbed().setTitle(msg).setColor(error ? 'RED' : gold);
+  }
+
+  public static inputPrivateReminder(error?: 'patternError'): MessageEmbed {
+    const msg = error == 'patternError' ? 'Time format must be hh:mm': 'How many hours before your event should I notify the participants?';
+
+    const embed = new MessageEmbed().setTitle(msg).setColor(error ? 'RED' : gold);
+    if (!error) {
+      embed.setDescription('Use the format hh:mm');
+    }
+
+    return embed;
+  }
+
+  public static confirmMessage(): MessageEmbed {
+    return new MessageEmbed()
+        .setDescription(`Select the ${MessageDecorator.confirmEmoji} reaction to confirm and publish,` +
+          `the ${MessageDecorator.editEmoji} reaction to make some changes or ` +
+          `the ${MessageDecorator.deleteEmoji} to cancel the event.`,
+        )
+        .setColor(gold);
+  }
+
+  public static okMessage(): MessageEmbed {
+    return new MessageEmbed().setTitle('All set! 🦌').setColor(gold);
+  }
 }

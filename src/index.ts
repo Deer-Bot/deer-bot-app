@@ -2,7 +2,7 @@
 
 require('dotenv').config();
 import path from 'path';
-import Discord from 'discord.js';
+import Discord, {MessageReaction} from 'discord.js';
 import Prefix from './cache/prefix.js';
 import Session from './cache/session';
 import DialogHandler from './base/dialog-handler';
@@ -24,8 +24,9 @@ client.on('message', async (message: EnrichedMessage) => {
   if (message.channel.type == 'dm') {
     const conversation = await Session.get(message.author.id);
     if (conversation != null) {
+      // Checks if the current message is part of the conversation
       if (client.dialogs.expect(message, conversation)) {
-        client.dialogs.continue(message, conversation)
+        client.dialogs.continue(message, conversation, message.author)
             .catch((err: any) => {
               message.reply('something went wrong during the conversation.');
               console.log(err);
@@ -55,6 +56,16 @@ client.on('message', async (message: EnrichedMessage) => {
 });
 
 client.on('messageReactionAdd', async (messageReaction, user) => {
+  handleReaction(messageReaction, user)
+      .catch((err) => console.log(err));
+});
+
+client.on('messageReactionRemove', async (messageReaction, user) => {
+  handleReaction(messageReaction, user)
+      .catch((err) => console.log(err));
+});
+
+const handleReaction = async (messageReaction: MessageReaction, user: Discord.User | Discord.PartialUser): Promise<void> => {
   if (user.bot) {
     return;
   }
@@ -65,7 +76,7 @@ client.on('messageReactionAdd', async (messageReaction, user) => {
   if (message.channel.type == 'dm') {
     const conversation = await Session.get(user.id);
     if (conversation != null && message.id === conversation.messageId) {
-      client.dialogs.continue(message, conversation)
+      client.dialogs.continue(message, conversation, user)
           .catch((err: any) => {
             message.reply('something went wrong during the conversation.');
             console.log(err);
@@ -73,7 +84,7 @@ client.on('messageReactionAdd', async (messageReaction, user) => {
       return;
     }
   }
-});
+};
 
 client.login(process.env.DISCORD_TOKEN);
 
