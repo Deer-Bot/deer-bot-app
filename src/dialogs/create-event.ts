@@ -5,6 +5,16 @@ import Dialog from '../base/dialog';
 import Session, {UserConversation} from '../cache/session';
 import MessageDecorator from '../common/message-decorator';
 
+enum Steps {
+  EnterTitle = 0,
+  EnterDescription,
+  EnterDate,
+  EnterTime,
+  EnterGlobalReminder,
+  EnterPrivateReminder,
+  ChooseAction
+}
+
 export default class CreateEventDialog extends Dialog {
   constructor() {
     super();
@@ -14,7 +24,7 @@ export default class CreateEventDialog extends Dialog {
   static async start(message: EnrichedMessage, guildId: string): Promise<void> {
     const conversation: UserConversation = {
       type: 'create',
-      step: 0,
+      step: Steps.EnterTitle,
       events: [
         {
           guild: guildId,
@@ -24,7 +34,7 @@ export default class CreateEventDialog extends Dialog {
     };
     await Session.create(message.author.id, conversation);
     await message.author.send(MessageDecorator.inputTitle());
-    await message.reply('check your DMs.');
+    await message.reply(MessageDecorator.message('Check your DMs.'));
   }
 
   async run(message: EnrichedMessage, conversation: UserConversation): Promise<void> {
@@ -37,25 +47,25 @@ export default class CreateEventDialog extends Dialog {
     const trimmedMessage = message.content.trim();
     const event = conversation.events[0];
     switch (conversation.step) {
-      case 0:
+      case Steps.EnterTitle:
         event.name = trimmedMessage;
         await message.author.send(MessageDecorator.inputDescription());
+        conversation.step = Steps.EnterDescription;
         break;
 
-      case 1:
+      case Steps.EnterDescription:
         if (trimmedMessage.length > 2048) {
-          conversation.step -= 1;
           await message.author.send(MessageDecorator.inputDescription(false));
           break;
         }
         event.description = trimmedMessage;
         await message.author.send(MessageDecorator.inputDate());
+        conversation.step = Steps.EnterDate;
         break;
 
-      case 2:
+      case Steps.EnterDate:
         const date = trimmedMessage;
         if (!InputValidator.validateDate(date)) {
-          conversation.step -= 1;
           await message.author.send(MessageDecorator.inputDate('patternError'));
           break;
         }
@@ -66,19 +76,18 @@ export default class CreateEventDialog extends Dialog {
         inputDate = new Date(year, month - 1, day);
 
         if (inputDate.getTime() < now.getTime()) {
-          conversation.step -= 1;
           await message.author.send(MessageDecorator.inputDate('timeError'));
           break;
         }
 
         event.date = date;
         await message.author.send(MessageDecorator.inputTime());
+        conversation.step = Steps.EnterTime;
         break;
 
-      case 3:
+      case Steps.EnterTime:
         const time = trimmedMessage;
         if (!InputValidator.validateTime(time)) {
-          conversation.step -= 1;
           await message.author.send(MessageDecorator.inputTime('patternError'));
           break;
         }
@@ -89,32 +98,31 @@ export default class CreateEventDialog extends Dialog {
         inputDate = new Date(Date.UTC(year, month - 1, day, hours, minutes));
 
         if (inputDate.getTime() < now.getTime()) {
-          conversation.step -= 1;
           await message.author.send(MessageDecorator.inputTime('timeError'));
           break;
         }
 
         event.date = inputDate;
         await message.author.send(MessageDecorator.inputGlobalReminder());
+        conversation.step = Steps.EnterGlobalReminder;
         break;
 
-      case 4:
+      case Steps.EnterGlobalReminder:
         // TODO controllare e finire la raccolta dati sui reminder e fare un nuovo case di conferma (vedere come fare)
         const globalReminder = trimmedMessage;
         const globalReminderInt = Number.parseInt(globalReminder);
         if (!InputValidator.validateNumber(globalReminder) || globalReminderInt == NaN || globalReminderInt <= 0) {
-          conversation.step -= 1;
           await message.author.send(MessageDecorator.inputGlobalReminder('patternError'));
           break;
         }
         event.globalReminder = globalReminderInt;
         await message.author.send(MessageDecorator.inputPrivateReminder());
+        conversation.step = Steps.EnterPrivateReminder;
         break;
 
-      case 5:
+      case Steps.EnterPrivateReminder:
         const privateReminder = trimmedMessage;
         if (!InputValidator.validateTime(privateReminder)) {
-          conversation.step -= 1;
           await message.author.send(MessageDecorator.inputTime('patternError'));
           break;
         }
@@ -128,9 +136,10 @@ export default class CreateEventDialog extends Dialog {
         await confirmMessage.react(MessageDecorator.editEmoji);
         await confirmMessage.react(MessageDecorator.deleteEmoji);
         conversation.messageId = confirmMessage.id;
+        conversation.step = Steps.ChooseAction;
         break;
 
-      case 6:
+      case Steps.ChooseAction:
         if (message.reaction.toString() === MessageDecorator.confirmEmoji) {
           // chiamare la funzione e pubblicare il messaggio
           await ApiClient.post('setEvent', {user: event.author});
@@ -150,17 +159,14 @@ export default class CreateEventDialog extends Dialog {
             updateMessage.react(emoji);
           }
           conversation.messageId = updateMessage.id;
-          conversation.step = 0; // this will become 1
+          conversation.step = 1; // this will become 1
           conversation.type = 'update';
-        } else {
-          conversation.step -= 1;
         }
     }
-    conversation.step += 1;
   }
 
   messageBelongToDialog(message: EnrichedMessage, conversation: UserConversation): boolean {
-    if (conversation.step < 6) {
+    if (conversation.step < Steps.ChooseAction) {
       return true;
     }
     return false;

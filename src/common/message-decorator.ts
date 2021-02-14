@@ -161,4 +161,8 @@ export default class MessageDecorator {
   public static okMessage(): MessageEmbed {
     return new MessageEmbed().setTitle('All set! 🦌').setColor(gold);
   }
+
+  public static message(message: string): MessageEmbed {
+    return new MessageEmbed().setDescription(message).setColor(gold);
+  }
 }
