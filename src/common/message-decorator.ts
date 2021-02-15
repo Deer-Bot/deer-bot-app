@@ -20,7 +20,7 @@ export default class MessageDecorator {
   public static confirmEmoji = '✅';
   public static editEmoji = '✏';
   public static deleteEmoji = '🗑';
-
+  public static cancelEmoji = '❎';
 
   public static async eventEmbed(client: Client, event: Event, isAuthor: boolean): Promise<MessageEmbed> {
     const guild = await client.guilds.fetch(event.guild);
@@ -84,6 +84,8 @@ export default class MessageDecorator {
             '**6.** Edit private reminder',
         )
         .setColor(gold);
+
+    embed.setFooter('Select the check reaction to confirm or the bin reaction to delete the event.');
 
     return embed;
   }
@@ -160,6 +162,12 @@ export default class MessageDecorator {
         .setColor(gold);
   }
 
+  public static confirmRemoveEvent(): MessageEmbed {
+    return new MessageEmbed()
+        .setTitle('Are you sure you want to cancel this event?')
+        .setColor(gold);
+  }
+
   public static okMessage(): MessageEmbed {
     return new MessageEmbed().setTitle('All set! 🦌').setColor(gold);
   }
@@ -169,6 +177,6 @@ export default class MessageDecorator {
   }
 
   public static message(message: string): MessageEmbed {
-    return new MessageEmbed().setDescription(message).setColor(gold);
+    return new MessageEmbed().setTitle(message).setColor(gold);
   }
 }

@@ -14,6 +14,7 @@ export enum Steps {
   ChangeTime,
   ChangeGlobalReminder,
   ChangePrivateReminder,
+  ConfirmDelete
 }
 
 const pageSize = 5;
@@ -63,6 +64,7 @@ export default class UpdateEventDialog extends Dialog {
       await Session.create(message.author.id, conversation);
     } else {
       message.author.send(MessageDecorator.noEventList());
+      conversation.valid = false;
     }
   }
 
@@ -148,6 +150,18 @@ export default class UpdateEventDialog extends Dialog {
           await message.channel.send(MessageDecorator.okMessage());
         } else if (MessageDecorator.deleteEmoji === message.reaction.toString()) {
           // Elimina
+
+          // Conferma elimina
+          const confirmDeleteMessage = await message.channel.send(MessageDecorator.confirmRemoveEvent());
+          confirmDeleteMessage.react(MessageDecorator.confirmEmoji)
+              .then(() => confirmDeleteMessage.react(MessageDecorator.cancelEmoji));
+          conversation.step = Steps.ConfirmDelete;
+          conversation.messageId = confirmDeleteMessage.id;
+        }
+        break;
+
+      case Steps.ConfirmDelete:
+        if (MessageDecorator.confirmEmoji === message.reaction.toString()) {
           if (event.id) {
             await ApiClient.delete('deleteEvent', {user: event.author});
           } else {
@@ -155,6 +169,8 @@ export default class UpdateEventDialog extends Dialog {
           }
           conversation.valid = false;
           await message.channel.send(MessageDecorator.removedEventMessage());
+        } else if (MessageDecorator.cancelEmoji === message.reaction.toString()) {
+          await this.sendSelectedEvent(message, conversation);
         }
         break;
 

@@ -1,9 +1,9 @@
 'use strict';
 
 import {Client} from 'discord.js';
-import Command from '../base/command.js';
+import Command from '../base/command';
 import ApiClient from '../api/api-client';
-import CreateEventDialog from '../dialogs/create-event.js';
+import CreateEventDialog from '../dialogs/create-event';
 
 export default class CreateEventCommand extends Command {
   constructor(client: Client) {

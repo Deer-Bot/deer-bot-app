@@ -6,6 +6,7 @@ import Session, {UserConversation} from '../cache/session';
 import MessageDecorator from '../common/message-decorator';
 import {Steps as UpdateSteps} from './update-event';
 
+
 enum Steps {
   EnterTitle = 0,
   EnterDescription,
@@ -13,7 +14,8 @@ enum Steps {
   EnterTime,
   EnterGlobalReminder,
   EnterPrivateReminder,
-  ChooseAction
+  ChooseAction,
+  ConfirmDelete
 }
 
 export default class CreateEventDialog extends Dialog {
@@ -169,11 +171,31 @@ export default class CreateEventDialog extends Dialog {
           conversation.type = 'update';
         } else if (message.reaction.toString() === MessageDecorator.deleteEmoji) {
           // Cancella evento (solo cache)
-          // TODO: capire perché non cancella dalla sessione
+          const confirmDeleteMessage = await message.channel.send(MessageDecorator.confirmRemoveEvent());
+          confirmDeleteMessage.react(MessageDecorator.confirmEmoji)
+              .then(() => confirmDeleteMessage.react(MessageDecorator.cancelEmoji));
+          conversation.step = Steps.ConfirmDelete;
+          conversation.messageId = confirmDeleteMessage.id;
+        }
+        break;
+
+      case Steps.ConfirmDelete:
+        // Elimina o annulla
+        if (MessageDecorator.confirmEmoji === message.reaction.toString()) {
           await Session.delete(event.author);
           conversation.valid = false;
           await message.channel.send(MessageDecorator.removedEventMessage());
+        } else if (MessageDecorator.cancelEmoji === message.reaction.toString()) {
+          const messageEmbed = await MessageDecorator.eventEmbed(message.client, event, true);
+          await message.channel.send(MessageDecorator.confirmMessage());
+          const confirmMessage = await message.channel.send(messageEmbed);
+          await confirmMessage.react(MessageDecorator.confirmEmoji);
+          await confirmMessage.react(MessageDecorator.editEmoji);
+          await confirmMessage.react(MessageDecorator.deleteEmoji);
+          conversation.messageId = confirmMessage.id;
+          conversation.step = Steps.ChooseAction;
         }
+        break;
     }
   }
 

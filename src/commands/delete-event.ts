@@ -2,20 +2,20 @@
 
 import {Client} from 'discord.js';
 import Command from '../base/command';
-import UpdateEventDialog from '../dialogs/update-event';
+import DeleteEventDialog from '../dialogs/delete-event';
 
-export default class UpdateEventCommand extends Command {
+export default class DeleteEventCommand extends Command {
   constructor(client: Client) {
     super(client, {
-      name: 'update',
+      name: 'delete',
       dmOnly: true,
-      usage: 'update',
+      usage: 'delete',
       // TODO: other command options
     });
   }
 
   protected async run(message: EnrichedMessage, args: string[]): Promise<any> {
-    return UpdateEventDialog.start(message);
+    return DeleteEventDialog.start(message);
   }
 
   protected checkArgs(args: string[]) {

@@ -1,7 +1,7 @@
 'use strict';
 
 import {Client} from 'discord.js';
-import Command from '../base/command.js';
+import Command from '../base/command';
 import Prefix from '../cache/prefix';
 
 export default class PrefixCommand extends Command {
