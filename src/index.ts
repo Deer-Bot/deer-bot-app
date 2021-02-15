@@ -23,7 +23,7 @@ client.on('message', async (message: EnrichedMessage) => {
 
   if (message.channel.type == 'dm') {
     const conversation = await Session.get(message.author.id);
-    if (conversation != null) {
+    if (conversation != undefined) {
       // Checks if the current message is part of the conversation
       if (client.dialogs.expect(message, conversation)) {
         client.dialogs.continue(message, conversation, message.author)

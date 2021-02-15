@@ -32,6 +32,9 @@ export default class DialogHandler {
   public async continue(message: EnrichedMessage, conversation: UserConversation, user: User | PartialUser) {
     const type = conversation.type;
     await this.dialogs.get(type).run(message, conversation);
-    await Session.update(user.id, conversation);
+
+    if (conversation.valid) {
+      await Session.update(user.id, conversation);
+    }
   }
 }

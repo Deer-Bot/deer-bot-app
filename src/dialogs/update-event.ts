@@ -16,6 +16,8 @@ export enum Steps {
   ChangePrivateReminder,
 }
 
+const pageSize = 5;
+
 export default class UpdateEventDialog extends Dialog {
   constructor() {
     super();
@@ -26,13 +28,14 @@ export default class UpdateEventDialog extends Dialog {
     const conversation: UserConversation = {
       type: 'update',
       step: Steps.SelectEvent,
+      valid: true,
     };
 
     // Chiama la Function per prendere gli eventi dell'utente
     const {events, hasNext}: {events: Event[], hasNext: boolean} = await ApiClient.get(`getEvents`, {
       author: message.author.id,
       offset: 0,
-      number: 5,
+      number: pageSize,
     });
 
     if (events.length > 0) {
@@ -40,7 +43,7 @@ export default class UpdateEventDialog extends Dialog {
       conversation.offset = 0;
       conversation.hasNext = hasNext;
 
-      const embed = await MessageDecorator.eventsList(message.client, events);
+      const embed = await MessageDecorator.eventsList(message.client, events, 1);
       const listMessage = await message.author.send(embed);
 
       if (hasNext) {
@@ -84,17 +87,17 @@ export default class UpdateEventDialog extends Dialog {
           return;
         } else if (((message.reaction.toString() === MessageDecorator.nextEmoji && conversation.hasNext) ||
           (message.reaction.toString() === MessageDecorator.prevEmoji && conversation.offset > 0))) {
-          conversation.offset += (message.reaction.toString() === MessageDecorator.nextEmoji) ? 5 : -5; // avanti o indietro
+          conversation.offset += (message.reaction.toString() === MessageDecorator.nextEmoji) ? pageSize : -pageSize; // avanti o indietro
           const {events, hasNext}: {events: Event[], hasNext: boolean} = await ApiClient.get(`getEvents`, {
             author: conversation.events[0].author,
             offset: conversation.offset,
-            number: 5,
+            number: pageSize,
           });
 
           conversation.events = events;
           conversation.hasNext = hasNext;
 
-          const embed = await MessageDecorator.eventsList(message.client, events);
+          const embed = await MessageDecorator.eventsList(message.client, events, Math.floor(conversation.offset / pageSize) + 1);
           const listMessage = await message.edit(embed);
 
           conversation.messageId = listMessage.id;
@@ -133,6 +136,8 @@ export default class UpdateEventDialog extends Dialog {
         } else if (MessageDecorator.confirmEmoji === message.reaction.toString()) {
           // Conferma
           await ApiClient.post('setEvent', {user: event.author}); // Update event in DB
+          conversation.valid = false;
+
           // Get default channel and publish event
           const {guild} = await ApiClient.get('getGuild', {guild: event.guild});
           const targetGuild = await message.client.guilds.fetch(guild.guild);
@@ -143,7 +148,12 @@ export default class UpdateEventDialog extends Dialog {
           await message.channel.send(MessageDecorator.okMessage());
         } else if (MessageDecorator.deleteEmoji === message.reaction.toString()) {
           // Elimina
-          await ApiClient.delete('deleteEvent', {user: event.author});
+          if (event.id) {
+            await ApiClient.delete('deleteEvent', {user: event.author});
+          } else {
+            await Session.delete(event.author);
+          }
+          conversation.valid = false;
           await message.channel.send(MessageDecorator.removedEventMessage());
         }
         break;
@@ -248,7 +258,7 @@ export default class UpdateEventDialog extends Dialog {
     conversation.step = Steps.ChooseActions;
   }
 
-  messageBelongToDialog(message: EnrichedMessage, conversation: UserConversation): boolean {
+  public messageBelongToDialog(message: EnrichedMessage, conversation: UserConversation): boolean {
     if (conversation.step === Steps.ChooseActions || conversation.step === Steps.SelectEvent) {
       return false;
     }

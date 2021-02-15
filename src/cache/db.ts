@@ -1,7 +1,5 @@
-import {UserConversation} from './session';
-
 interface GetFunction {
-  (key: string): Promise<string | UserConversation>
+  (key: string): Promise<number | string | {[index: string]: string}>
 }
 
 interface SetFunction {

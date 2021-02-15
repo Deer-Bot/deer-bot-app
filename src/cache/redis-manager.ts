@@ -1,54 +1,26 @@
 'use strict';
-import redis, {RedisClient} from 'redis';
-import bluebird from 'bluebird';
+import {Tedis} from 'tedis';
 import RedisDb from './db.js';
-import {UserConversation} from './session.js';
 
-// Convert Redis client API to use promises, to make it usable with async/await syntax
-// bluebird.promisifyAll(redis.RedisClient.prototype);
-// bluebird.promisifyAll(redis.Multi.prototype);
-
-const cacheConnection = redis.createClient({
+const cacheConnection = new Tedis({
   host: process.env.REDIS_HOSTNAME,
   port: process.env.REDIS_PORT as any as number,
   password: process.env.REDIS_KEY,
-//  tls: {servername: process.env.REDIS_HOSTNAME}, // Understand
+  // set tls,
 });
 
-// Convert Redis client API to use promises, to make it usable with async/await syntax
-cacheConnection.get = bluebird.promisify(cacheConnection.get).bind(cacheConnection);
-cacheConnection.set = bluebird.promisify(cacheConnection.set).bind(cacheConnection);
-cacheConnection.hgetall = bluebird.promisify(cacheConnection.hgetall).bind(cacheConnection);
-cacheConnection.hmset = bluebird.promisify(cacheConnection.hmset).bind(cacheConnection);
-cacheConnection.select = bluebird.promisify(cacheConnection.select).bind(cacheConnection);
-cacheConnection.expire = bluebird.promisify(cacheConnection.expire).bind(cacheConnection);
-cacheConnection.del = bluebird.promisify(cacheConnection.del).bind(cacheConnection);
+cacheConnection.get = cacheConnection.get.bind(cacheConnection);
+cacheConnection.hgetall = cacheConnection.hgetall.bind(cacheConnection);
+cacheConnection.set = cacheConnection.set.bind(cacheConnection);
+cacheConnection.hmset = cacheConnection.hmset.bind(cacheConnection);
+cacheConnection.del = cacheConnection.del.bind(cacheConnection);
 
 interface Databases {
   [index: string]: RedisDb;
 }
 
-declare module 'redis' {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  interface Commands<R> {
-    set(key: string, value: string): Promise<'OK'>;
-    get(key: string): Promise<string>;
-    hgetall(key: string): Promise<UserConversation>;
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  interface OverloadedSetCommand<T, U, R> {
-    (key: string, arg1: T | { [key: string]: T } | T[]): Promise<'OK'>
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  interface OverloadedCommand<T, U, R> {
-    (arg1: T | T[]): Promise<U>;
-  }
-}
-
 export default class RedisManager {
-  private client: RedisClient;
+  private client: Tedis;
   private db: Databases;
   private static instance: RedisManager;
   public static readonly User = 'user';
@@ -76,7 +48,7 @@ export default class RedisManager {
       throw new Error('Redis database not found');
     }
 
-    await this.client.select(db.index);
+    await this.client.command('select', db.index);
     const result = await db.set(key, value);
     await this.client.expire(key, db.ttl);
 
@@ -84,28 +56,27 @@ export default class RedisManager {
     return result === 'OK';
   }
 
-  async get(key: string, dbName: string): Promise<string | UserConversation> {
+  async get(key: string, dbName: string): Promise< number | string | {[index: string]: string}> {
     const db = this.db[dbName];
     if (db === undefined) {
       throw new Error('Redis database not found');
     }
 
-    await this.client.select(db.index);
+    await this.client.command('select', db.index);
+
     const result = await db.get(key);
     await this.client.expire(key, db.ttl);
 
     return result;
   }
 
-  async del(key: string, dbName: string): Promise<boolean> {
+  async del(key: string, dbName: string): Promise<number> {
     const db = this.db[dbName];
     if (db === undefined) {
       throw new Error('Redis database not found');
     }
 
-    await this.client.select(db.index);
-    const result = await cacheConnection.del(key); // Non cancella dalla sessione non so perché 😅
-
-    return result === 1;
+    await this.client.command('select', db.index);
+    return this.client.del(key);
   }
 }

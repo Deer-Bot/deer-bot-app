@@ -42,6 +42,6 @@
     "discord.js": "^12.5.1",
     "discord.js-light": "^3.5.3",
     "dotenv": "^8.2.0",
-    "redis": "^3.0.2"
+    "tedis": "^0.1.12"
   }
 }

@@ -45,7 +45,7 @@ export default class MessageDecorator {
     return embed;
   }
 
-  public static async eventsList(client: Client, events: Event[]): Promise<MessageEmbed> {
+  public static async eventsList(client: Client, events: Event[], page: number): Promise<MessageEmbed> {
     const embed = new MessageEmbed();
     embed.setTitle('Your events')
         .setColor(gold);
@@ -66,6 +66,8 @@ export default class MessageDecorator {
         {name: 'Date', value: eventDates.join('\n'), inline: true},
         {name: 'Server', value: serverNames.join('\n'), inline: true},
     );
+
+    embed.setFooter(`Page ${page}`);
 
     return embed;
   }

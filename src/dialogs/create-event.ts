@@ -26,6 +26,7 @@ export default class CreateEventDialog extends Dialog {
     const conversation: UserConversation = {
       type: 'create',
       step: Steps.EnterTitle,
+      valid: true,
       events: [
         {
           guild: guildId,
@@ -142,9 +143,11 @@ export default class CreateEventDialog extends Dialog {
 
       case Steps.ChooseAction:
         if (message.reaction.toString() === MessageDecorator.confirmEmoji) {
-          // chiamare la funzione e pubblicare il messaggio
+          // Chiama la funzione che crea l'evento nel database e invalida la sessione
           await ApiClient.post('setEvent', {user: event.author});
-          // Get default channel and publish event
+          conversation.valid = false;
+
+          // Prende la guild in cui pubblicare l'evento e lo pubblica
           const {guild} = await ApiClient.get('getGuild', {guild: event.guild});
           const targetGuild = await message.client.guilds.fetch(guild.guild);
           const targetChannel = await targetGuild.channels.cache.get(guild.channel);
@@ -159,6 +162,8 @@ export default class CreateEventDialog extends Dialog {
           for (const emoji of MessageDecorator.fieldsEmoji) {
             updateMessage.react(emoji);
           }
+          updateMessage.react(MessageDecorator.confirmEmoji);
+          updateMessage.react(MessageDecorator.deleteEmoji);
           conversation.messageId = updateMessage.id;
           conversation.step = UpdateSteps.ChooseActions;
           conversation.type = 'update';
@@ -166,6 +171,7 @@ export default class CreateEventDialog extends Dialog {
           // Cancella evento (solo cache)
           // TODO: capire perché non cancella dalla sessione
           await Session.delete(event.author);
+          conversation.valid = false;
           await message.channel.send(MessageDecorator.removedEventMessage());
         }
     }
