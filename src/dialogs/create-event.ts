@@ -25,6 +25,7 @@ export default class CreateEventDialog extends Dialog {
   }
 
   static async start(message: EnrichedMessage, guildId: string): Promise<void> {
+    const {channelId} = await ApiClient.get('getGuild', {guild: guildId});
     const conversation: UserConversation = {
       type: 'create',
       step: Steps.EnterTitle,
@@ -33,6 +34,7 @@ export default class CreateEventDialog extends Dialog {
         {
           guild: guildId,
           author: message.author.id,
+          channel: channelId,
         },
       ],
     };

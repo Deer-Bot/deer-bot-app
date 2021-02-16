@@ -23,6 +23,7 @@ export interface Event {
   id?: string,
   author: string,
   guild: string,
+  channel: string,
   name?: string,
   description?: string,
   date?: Date | string,
