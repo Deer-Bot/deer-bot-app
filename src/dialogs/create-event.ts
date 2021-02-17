@@ -5,6 +5,7 @@ import Dialog from '../base/dialog';
 import Session, {UserConversation} from '../cache/session';
 import MessageDecorator from '../common/message-decorator';
 import {Steps as UpdateSteps} from './update-event';
+import EventMessage from '../cache/event-message';
 
 
 enum Steps {
@@ -114,7 +115,6 @@ export default class CreateEventDialog extends Dialog {
         break;
 
       case Steps.EnterGlobalReminder:
-        // TODO controllare e finire la raccolta dati sui reminder e fare un nuovo case di conferma (vedere come fare)
         const globalReminder = trimmedMessage;
         const globalReminderInt = Number.parseInt(globalReminder);
         if (!InputValidator.validateNumber(globalReminder) || globalReminderInt == NaN || globalReminderInt <= 0) {
@@ -148,7 +148,7 @@ export default class CreateEventDialog extends Dialog {
       case Steps.ChooseAction:
         if (message.reaction.toString() === MessageDecorator.confirmEmoji) {
           // Chiama la funzione che crea l'evento nel database e invalida la sessione
-          await ApiClient.post('setEvent', {user: event.author});
+          const {eventId} = await ApiClient.post('setEvent', {user: event.author});
           conversation.valid = false;
 
           // Prende la guild in cui pubblicare l'evento e lo pubblica
@@ -157,8 +157,10 @@ export default class CreateEventDialog extends Dialog {
           const targetChannel = await targetGuild.channels.cache.get(guild.channel);
           const publicEventMessage = await MessageDecorator.eventEmbed(message.client, event, false);
 
-          await (targetChannel as TextChannel).send(publicEventMessage);
+          const publishedEventMessage = await (targetChannel as TextChannel).send(publicEventMessage);
           await message.channel.send(MessageDecorator.okMessage());
+
+          await EventMessage.set(publishedEventMessage.id, eventId);
         } else if (message.reaction.toString() === MessageDecorator.editEmoji) {
           // Modifica dell'evento
           const embed = MessageDecorator.updateEventEmbed();

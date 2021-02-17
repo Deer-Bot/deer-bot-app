@@ -4,6 +4,7 @@ import Dialog from '../base/dialog';
 import Session, {Event, UserConversation} from '../cache/session';
 import MessageDecorator from '../common/message-decorator';
 import {TextChannel} from 'discord.js';
+import EventMessage from '../cache/event-message';
 
 export enum Steps {
   SelectEvent = 0,
@@ -137,7 +138,7 @@ export default class UpdateEventDialog extends Dialog {
           }
         } else if (MessageDecorator.confirmEmoji === message.reaction.toString()) {
           // Conferma
-          await ApiClient.post('setEvent', {user: event.author}); // Update event in DB
+          const {eventId} = await ApiClient.post('setEvent', {user: event.author}); // Update event in DB
           conversation.valid = false;
 
           // Get default channel and publish event
@@ -146,8 +147,10 @@ export default class UpdateEventDialog extends Dialog {
           const targetChannel = await targetGuild.channels.cache.get(guild.channel);
           const publicEventMessage = await MessageDecorator.eventEmbed(message.client, event, false);
 
-          await (targetChannel as TextChannel).send(publicEventMessage);
+          const publishedEventMessage = await (targetChannel as TextChannel).send(publicEventMessage);
           await message.channel.send(MessageDecorator.okMessage());
+
+          await EventMessage.set(publishedEventMessage.id, eventId);
         } else if (MessageDecorator.deleteEmoji === message.reaction.toString()) {
           // Elimina
 

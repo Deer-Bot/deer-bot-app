@@ -20,12 +20,14 @@ export default class ApiClient {
     }
   }
 
-  public static async post(url: string, body?: {[index: string]: Object}): Promise<void> {
+  public static async post(url: string, body?: {[index: string]: Object}): Promise<any> {
     const res = await ApiClient.instance.post(url, body);
 
     if (res.status !== 200) {
       throw new ApiError(`API responded with status code: ${res.status}`, res.status);
     }
+
+    return res.data;
   }
 
   public static async delete(url: string, body?: {[index: string]: Object}): Promise<void> {

@@ -8,27 +8,27 @@ export default class Prefix {
   public static defaultPrefix = '!';
 
   // Get the prefix for the server from DB and store it into the redis cache
-  static async get(key: string): Promise<string> {
-    if (key == undefined) {
+  static async get(guildId: string): Promise<string> {
+    if (guildId == undefined) {
       return Prefix.defaultPrefix;
     }
 
-    let prefix = await Prefix.client.get(key, Prefix.db) as string;
+    let prefix = await Prefix.client.get(guildId, Prefix.db) as string;
     if (prefix == null) {
       // Lettura del prefix dal db
-      const data = await ApiClient.get('getGuild', {guild: key});
+      const data = await ApiClient.get('getGuild', {guild: guildId});
       prefix = data.guild?.prefix || Prefix.defaultPrefix;
     }
     // Set nella cache
-    await Prefix.client.set(key, prefix, Prefix.db);
+    await Prefix.client.set(guildId, prefix, Prefix.db);
 
     return prefix;
   }
 
   // Save the prefix into the DB and update the cache
-  static async set(key: string, value: string): Promise<void> {
+  static async set(guildId: string, prefix: string): Promise<void> {
     // Salva il prefix nel db
-    await ApiClient.post(`setGuild`, {guild: key, prefix: value});
-    await Prefix.client.set(key, value, Prefix.db);
+    await ApiClient.post(`setGuild`, {guild: guildId, prefix: prefix});
+    await Prefix.client.set(guildId, prefix, Prefix.db);
   }
 }

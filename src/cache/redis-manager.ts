@@ -25,12 +25,15 @@ export default class RedisManager {
   private static instance: RedisManager;
   public static readonly User = 'user';
   public static readonly Guild = 'guild';
+  public static readonly Message = 'message';
+
 
   private constructor() {
     this.client = cacheConnection;
     this.db = {
       user: new RedisDb(0, 300, this.client.hgetall, this.client.hmset, this.client.del),
       guild: new RedisDb(1, 3600, this.client.get, this.client.set, this.client.del),
+      message: new RedisDb(2, 3600, this.client.get, this.client.set, this.client.del),
     };
   }
 
