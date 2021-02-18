@@ -7,6 +7,9 @@ import Prefix from './cache/prefix.js';
 import Session from './cache/session';
 import DialogHandler from './base/dialog-handler';
 import CommandHandler from './base/command-handler.js';
+import EventMessage from './cache/event-message.js';
+import MessageDecorator from './common/message-decorator.js';
+import ApiClient from './api/api-client.js';
 
 const client = new Discord.Client() as EnrichedClient;
 client.dialogs = new DialogHandler(path.resolve(__dirname, 'dialogs'));
@@ -56,16 +59,16 @@ client.on('message', async (message: EnrichedMessage) => {
 });
 
 client.on('messageReactionAdd', async (messageReaction, user) => {
-  handleReaction(messageReaction, user)
+  handleReaction(messageReaction, user, true)
       .catch((err) => console.log(err));
 });
 
 client.on('messageReactionRemove', async (messageReaction, user) => {
-  handleReaction(messageReaction, user)
+  handleReaction(messageReaction, user, false)
       .catch((err) => console.log(err));
 });
 
-const handleReaction = async (messageReaction: MessageReaction, user: Discord.User | Discord.PartialUser): Promise<void> => {
+const handleReaction = async (messageReaction: MessageReaction, user: Discord.User | Discord.PartialUser, emojiAdded: boolean): Promise<void> => {
   if (user.bot) {
     return;
   }
@@ -73,7 +76,7 @@ const handleReaction = async (messageReaction: MessageReaction, user: Discord.Us
   const message: EnrichedMessage = messageReaction.message;
   message.reaction = messageReaction.emoji;
 
-  if (message.channel.type == 'dm') {
+  if (message.channel.type === 'dm') {
     const conversation = await Session.get(user.id);
     if (conversation != null && message.id === conversation.messageId) {
       client.dialogs.continue(message, conversation, user)
@@ -83,6 +86,17 @@ const handleReaction = async (messageReaction: MessageReaction, user: Discord.Us
           });
       return;
     }
+  } else if (
+    message.channel.type === 'text' &&
+    message.author.id === client.user.id &&
+    message.reaction.toString() === MessageDecorator.confirmEmoji
+  ) {
+    const eventId = await EventMessage.get(message.id);
+    if (eventId == null) {
+      return;
+    }
+    ApiClient.post('setParticipant', {userId: user.id, eventId: eventId, add: emojiAdded})
+        .catch((err) => console.log(err));
   }
 };
 

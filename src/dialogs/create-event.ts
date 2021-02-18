@@ -158,9 +158,10 @@ export default class CreateEventDialog extends Dialog {
           const publicEventMessage = await MessageDecorator.eventEmbed(message.client, event, false);
 
           const publishedEventMessage = await (targetChannel as TextChannel).send(publicEventMessage);
+          publishedEventMessage.react(MessageDecorator.confirmEmoji);
           await message.channel.send(MessageDecorator.okMessage());
 
-          await EventMessage.set(publishedEventMessage.id, eventId);
+          await EventMessage.set(publishedEventMessage.id, eventId, event.author);
         } else if (message.reaction.toString() === MessageDecorator.editEmoji) {
           // Modifica dell'evento
           const embed = MessageDecorator.updateEventEmbed();

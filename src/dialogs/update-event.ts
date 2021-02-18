@@ -144,13 +144,19 @@ export default class UpdateEventDialog extends Dialog {
           // Get default channel and publish event
           const {guild} = await ApiClient.get('getGuild', {guild: event.guild});
           const targetGuild = await message.client.guilds.fetch(guild.guild);
-          const targetChannel = await targetGuild.channels.cache.get(guild.channel);
+          const targetChannel = await targetGuild.channels.cache.get(guild.channel) as TextChannel;
           const publicEventMessage = await MessageDecorator.eventEmbed(message.client, event, false);
 
-          const publishedEventMessage = await (targetChannel as TextChannel).send(publicEventMessage);
+          const publishedEventMessage = await targetChannel.send(publicEventMessage);
+          publishedEventMessage.react(MessageDecorator.confirmEmoji);
           await message.channel.send(MessageDecorator.okMessage());
+          if (event.id) {
+            await EventMessage.delete(event.messageId);
+            targetChannel.messages.delete(event.messageId)
+                .catch((err) => {});
+          }
 
-          await EventMessage.set(publishedEventMessage.id, eventId);
+          await EventMessage.set(publishedEventMessage.id, eventId, event.author);
         } else if (MessageDecorator.deleteEmoji === message.reaction.toString()) {
           // Elimina
 

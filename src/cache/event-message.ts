@@ -15,8 +15,12 @@ export default class EventMessage {
     let eventId = await EventMessage.client.get(messageId, EventMessage.db) as string;
     if (eventId == null) {
       // Lettura dell'id dal db
-      const {id} = await ApiClient.get('getEventByMessage', {message: messageId});
-      eventId = id;
+      const {event} = await ApiClient.get('getEventByMessage', {messageId: messageId});
+      if (event == null) {
+        return null;
+      }
+
+      eventId = event.id;
     }
 
     // Set nella cache
@@ -26,9 +30,13 @@ export default class EventMessage {
   }
 
   // Salva l'id dell'evento nel db e aggiorna la cache
-  static async set(messageId: string, eventId: string): Promise<void> {
+  static async set(messageId: string, eventId: string, authorId: string): Promise<void> {
     // Salva l'id nel db
-    await ApiClient.post(`setMessage`, {message: messageId, event: eventId});
+    await ApiClient.post(`setMessage`, {messageId: messageId, eventId: eventId, authorId: authorId});
     await EventMessage.client.set(messageId, eventId, EventMessage.db);
+  }
+
+  static async delete(messageId: string): Promise<void> {
+    await EventMessage.client.del(messageId, EventMessage.db);
   }
 }

@@ -24,6 +24,7 @@ export interface Event {
   author: string,
   guild: string,
   channel: string,
+  messageId?: string,
   name?: string,
   description?: string,
   date?: Date | string,
