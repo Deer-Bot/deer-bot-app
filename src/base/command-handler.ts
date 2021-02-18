@@ -1,5 +1,6 @@
 import {Collection} from 'discord.js';
 import fs from 'fs';
+import MessageDecorator from '../common/message-decorator';
 import Command from './command';
 
 export default class CommandHandler {
@@ -30,8 +31,7 @@ export default class CommandHandler {
 
     this.commands.get(commandName).execute(message, args)
         .catch((err: any) => {
-          // TODO: sistemare visualizzazione errore
-          message.reply('something went wrong while executing the command.');
+          message.reply(MessageDecorator.commandError());
           console.log(err);
         });
   }

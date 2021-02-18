@@ -2,7 +2,7 @@
 import RedisManager from './redis-manager';
 
 interface AbstractUserConversation {
-  type: 'create' | 'update' | 'delete',
+  type: 'create' | 'update' | 'delete' | 'participants',
   step: any,
   valid: any,
   messageId?: string,
@@ -32,6 +32,7 @@ export interface Event {
   privateReminder?: number,
   globalReminderDate?: Date | string,
   privateReminderDate?: Date | string,
+  participants?: string[]
 }
 
 export default class Session {

@@ -10,7 +10,6 @@ export default class DeleteEventCommand extends Command {
       name: 'delete',
       dmOnly: true,
       usage: 'delete',
-      // TODO: other command options
     });
   }
 

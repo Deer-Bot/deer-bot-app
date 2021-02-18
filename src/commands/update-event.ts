@@ -10,7 +10,6 @@ export default class UpdateEventCommand extends Command {
       name: 'update',
       dmOnly: true,
       usage: 'update',
-      // TODO: other command options
     });
   }
 

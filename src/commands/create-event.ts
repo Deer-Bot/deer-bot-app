@@ -12,7 +12,6 @@ export default class CreateEventCommand extends Command {
       permissions: ['ADMINISTRATOR'],
       guildOnly: true,
       usage: 'create',
-      // TODO: other command options
     });
   }
 

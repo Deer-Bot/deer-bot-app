@@ -1,6 +1,7 @@
 'use strict';
 
 import {Client, PermissionResolvable} from 'discord.js';
+import MessageDecorator from '../common/message-decorator';
 
 interface CommandOptions {
     name: string,
@@ -33,10 +34,10 @@ export default abstract class Command {
       return;
     }
     if (!this.userHasPermissions(message)) {
-      return message.reply('you do not have the required permission to execute this command.');
+      return message.reply(MessageDecorator.commandError('You do not have the required permission to execute this command.'));
     }
     if (!this.checkArgs(args)) {
-      return message.reply(`the usage of this command is: ${message.prefix}${this.usage}`);
+      return message.reply(MessageDecorator.commandError(`The usage of this command is: ${message.prefix}${this.usage}`));
     }
 
     // dopo tutti i controlli...
@@ -72,7 +73,7 @@ export default abstract class Command {
   }
 
   protected sendError(message: EnrichedMessage): void {
-    message.reply('something went wrong while executing the command.');
+    message.reply(MessageDecorator.commandError());
     return;
   }
 }

@@ -52,19 +52,21 @@ export default class MessageDecorator {
 
     const eventNames = [];
     const eventDates = [];
-    const serverNames = [];
+    const serverAndParticipants = [];
+
     for (let i = 0; i < events.length; i++) {
       const event = events[i];
       const guild = await client.guilds.fetch(event.guild);
       eventNames.push(`**${i + 1}.** ${event.name}`);
       eventDates.push(dateToString(new Date(event.date)));
-      serverNames.push(guild.name);
+      const participants = `${event.participants ? event.participants.length : 0} ${event.participants?.length == 1 ? 'person' : 'people'} will participate`;
+      serverAndParticipants.push(`${guild.name} **-** ${participants}`);
     }
 
     embed.addFields(
         {name: 'Event name', value: eventNames.join('\n'), inline: true},
         {name: 'Date', value: eventDates.join('\n'), inline: true},
-        {name: 'Server', value: serverNames.join('\n'), inline: true},
+        {name: 'Server and Participants', value: serverAndParticipants.join('\n'), inline: true},
     );
 
     embed.setFooter(`Page ${page}`);
@@ -91,7 +93,7 @@ export default class MessageDecorator {
   }
 
   public static noEventList(): MessageEmbed {
-    return new MessageEmbed().setDescription('You don\'t have any events at the moment.').setColor('RED');
+    return new MessageEmbed().setTitle('You don\'t have any events at the moment.').setColor('RED');
   }
 
   public static inputTitle(): MessageEmbed {
@@ -178,5 +180,43 @@ export default class MessageDecorator {
 
   public static message(message: string): MessageEmbed {
     return new MessageEmbed().setTitle(message).setColor(gold);
+  }
+
+  public static noParticipantsList(): MessageEmbed {
+    return new MessageEmbed().setTitle('This event has no participants at the moment.').setColor('RED');
+  }
+
+  public static async participantsList(client: Client, event: Event, offset: number, pageSize: number): Promise<MessageEmbed> {
+    const embed = new MessageEmbed();
+    const participants = event.participants;
+
+    const participantsNames = [];
+    const guild = await client.guilds.fetch(event.guild);
+
+    for (let i = offset; i < offset + pageSize && i < participants.length; i++ ) {
+      const participant = await guild.members.fetch({
+        user: participants[i],
+        cache: true,
+        force: true,
+      });
+      participantsNames.push(`**${participant.displayName}** (${participant.user.tag})`);
+    }
+
+    embed.setTitle(`Participants of ${event.name}`)
+        .setDescription(participantsNames.join('\n'))
+        .setFooter(`Page ${Math.floor(offset / pageSize) + 1}`)
+        .setColor(gold);
+
+    return embed;
+  }
+
+  public static conversationError() {
+    return MessageDecorator.message('Something went wrong during the conversation.').setColor('RED');
+  }
+
+  public static commandError(message?: string) {
+    const msg = message ? message : 'Something went wrong while executing the command.';
+
+    return MessageDecorator.message(msg).setColor('RED');
   }
 }

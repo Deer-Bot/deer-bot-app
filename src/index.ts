@@ -31,7 +31,7 @@ client.on('message', async (message: EnrichedMessage) => {
       if (client.dialogs.expect(message, conversation)) {
         client.dialogs.continue(message, conversation, message.author)
             .catch((err: any) => {
-              message.reply('something went wrong during the conversation.');
+              message.reply(MessageDecorator.conversationError());
               console.log(err);
             });
         return;
@@ -81,7 +81,7 @@ const handleReaction = async (messageReaction: MessageReaction, user: Discord.Us
     if (conversation != null && message.id === conversation.messageId) {
       client.dialogs.continue(message, conversation, user)
           .catch((err: any) => {
-            message.reply('something went wrong during the conversation.');
+            message.reply(MessageDecorator.conversationError());
             console.log(err);
           });
       return;

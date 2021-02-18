@@ -1,6 +1,7 @@
 'use strict';
 
 import {Client} from 'discord.js';
+import MessageDecorator from '../common/message-decorator';
 import Command from '../base/command';
 import Prefix from '../cache/prefix';
 
@@ -11,7 +12,6 @@ export default class PrefixCommand extends Command {
       permissions: ['ADMINISTRATOR'],
       guildOnly: true,
       usage: `prefix <new prefix>`,
-      // TODO: other command options
     });
   }
 
@@ -19,7 +19,7 @@ export default class PrefixCommand extends Command {
     // Salva il nuovo prefisso
     await Prefix.set(message.guild.id, args[0]);
 
-    return message.reply(`your new prefix is ${args[0]}`);
+    return message.reply(MessageDecorator.message(`Your new prefix is ${args[0]}`));
   }
 
   protected checkArgs(args: string[]) {

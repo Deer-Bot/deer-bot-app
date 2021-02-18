@@ -3,6 +3,7 @@
 import {Client} from 'discord.js';
 import Command from '../base/command';
 import ApiClient from '../api/api-client';
+import MessageDecorator from '../common/message-decorator';
 
 export default class ChannelCommand extends Command {
   constructor(client: Client) {
@@ -11,7 +12,6 @@ export default class ChannelCommand extends Command {
       permissions: ['ADMINISTRATOR'],
       guildOnly: true,
       usage: 'channel [channel name](optional)',
-      // TODO: other command options
     });
   }
 
@@ -20,16 +20,16 @@ export default class ChannelCommand extends Command {
     if (args.length !== 0) {
       const channelIds = message.guild.channels.cache.filter((channel) => channel.name === args[0]);
       if (channelIds.size === 0) {
-        return message.reply('I could not find the channel you specified.');
+        return message.reply(MessageDecorator.commandError('I could not find the channel you specified.'));
       }
       if (channelIds.size > 1) {
-        return message.reply('there are too many channels with that name, use the command in the desired channel without any arguments.');
+        return message.reply(MessageDecorator.commandError('There are too many channels with that name, use the command in the desired channel without any arguments.'));
       }
       channelId = channelIds.first().id;
     }
     await ApiClient.post(`setGuild`, {guild: message.guild.id, channel: channelId});
 
-    return message.reply('all set.');
+    return message.reply(MessageDecorator.okMessage());
   }
 
   protected checkArgs(args: string[]) {
