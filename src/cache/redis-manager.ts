@@ -1,4 +1,3 @@
-'use strict';
 import {Tedis} from 'tedis';
 import RedisDb from './redis-db.js';
 

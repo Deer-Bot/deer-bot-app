@@ -1,5 +1,3 @@
-'use strict';
-
 import {Client} from 'discord.js';
 import Command from '../base/command';
 import ApiClient from '../api/api-client';

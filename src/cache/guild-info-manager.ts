@@ -1,4 +1,3 @@
-'use strict';
 import RedisManager from './redis-manager';
 import ApiClient from '../api/api-client';
 

@@ -1,7 +1,5 @@
-'use strict';
 import RedisManager from './redis-manager';
 import ApiClient from '../api/api-client';
-
 
 export default class EventMessageManager {
   private static client = RedisManager.getInstance();

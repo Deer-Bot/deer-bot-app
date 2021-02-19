@@ -1,5 +1,3 @@
-'use strict';
-
 import {Client} from 'discord.js';
 import Command from '../base/command';
 import UpdateEventDialog from '../dialogs/update-event';

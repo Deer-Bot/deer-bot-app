@@ -1,5 +1,3 @@
-'use strict';
-
 require('dotenv').config();
 import path from 'path';
 import Discord, {MessageReaction} from 'discord.js';

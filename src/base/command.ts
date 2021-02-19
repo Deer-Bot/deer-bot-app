@@ -1,5 +1,3 @@
-'use strict';
-
 import {Client, PermissionResolvable} from 'discord.js';
 import MessageDecorator from '../common/message-decorator';
 

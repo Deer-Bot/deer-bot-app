@@ -1,4 +1,3 @@
-'use strict';
 import RedisManager from './redis-manager';
 
 interface AbstractUserConversation {
