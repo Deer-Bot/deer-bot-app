@@ -21,9 +21,9 @@ export interface UserConversation extends AbstractUserConversation {
 
 export interface Event {
   id?: string,
-  author: string,
-  guild: string,
-  channel: string,
+  authorId: string,
+  guildId: string,
+  channelId: string,
   messageId?: string,
   name?: string,
   description?: string,
@@ -35,14 +35,14 @@ export interface Event {
   participants?: string[]
 }
 
-export default class Session {
+export default class ConversationManager {
   private static client = RedisManager.getInstance();
-  private static db = RedisManager.User;
+  private static db = RedisManager.Conversation;
 
-  static async create(userId: string, value: UserConversation): Promise<void> {
-    const flattened = flattenConversation(value);
+  static async create(userId: string, conversation: UserConversation): Promise<void> {
+    const flattened = flattenConversation(conversation);
 
-    const result = await Session.client.set(userId, flattened, Session.db);
+    const result = await ConversationManager.client.set(userId, flattened, ConversationManager.db);
 
     if (result != true) {
       throw new Error('Could not write to Redis cache');
@@ -50,21 +50,21 @@ export default class Session {
   }
 
   static async get(userId: string): Promise<UserConversation> {
-    const flatConversation = await Session.client.get(userId, Session.db);
+    const flatConversation = await ConversationManager.client.get(userId, ConversationManager.db);
     return enflateConversation(flatConversation as any as FlatUserConversation);
   }
 
-  static async update(userId: string, value: UserConversation): Promise<void> {
-    const flattened = flattenConversation(value);
+  static async update(userId: string, conversation: UserConversation): Promise<void> {
+    const flattened = flattenConversation(conversation);
 
-    const result = await Session.client.set(userId, flattened, Session.db);
+    const result = await ConversationManager.client.set(userId, flattened, ConversationManager.db);
     if (result != true) {
       throw new Error('Could not write to Redis cache');
     }
   }
 
   static async delete(userId: string): Promise<void> {
-    const result = await Session.client.del(userId, Session.db);
+    const result = await ConversationManager.client.del(userId, ConversationManager.db);
     if (result === 0) {
       throw new Error('Could not delete from Redis cache');
     }

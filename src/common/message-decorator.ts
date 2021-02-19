@@ -1,5 +1,5 @@
 import {Client, MessageEmbed} from 'discord.js';
-import {Event} from '../cache/session';
+import {Event} from '../cache/conversation-manager';
 
 const pads = (s: number): string => {
   return s < 10 ? `0${s}` : `${s}`;
@@ -22,9 +22,10 @@ export default class MessageDecorator {
   public static deleteEmoji = '🗑';
   public static cancelEmoji = '❎';
 
+  // TODO: cambiare per adattare la timezone
   public static async eventEmbed(client: Client, event: Event, isAuthor: boolean): Promise<MessageEmbed> {
-    const guild = await client.guilds.fetch(event.guild);
-    const member = await guild.members.fetch(event.author);
+    const guild = await client.guilds.fetch(event.guildId);
+    const member = await guild.members.fetch(event.authorId);
     const minutes = event.privateReminder % 60;
     const date = new Date(event.date);
 
@@ -56,7 +57,7 @@ export default class MessageDecorator {
 
     for (let i = 0; i < events.length; i++) {
       const event = events[i];
-      const guild = await client.guilds.fetch(event.guild);
+      const guild = await client.guilds.fetch(event.guildId);
       eventNames.push(`**${i + 1}.** ${event.name}`);
       eventDates.push(dateToString(new Date(event.date)));
       const participants = `${event.participants ? event.participants.length : 0} ${event.participants?.length == 1 ? 'person' : 'people'} will participate`;
@@ -191,7 +192,7 @@ export default class MessageDecorator {
     const participants = event.participants;
 
     const participantsNames = [];
-    const guild = await client.guilds.fetch(event.guild);
+    const guild = await client.guilds.fetch(event.guildId);
 
     for (let i = offset; i < offset + pageSize && i < participants.length; i++ ) {
       const participant = await guild.members.fetch({

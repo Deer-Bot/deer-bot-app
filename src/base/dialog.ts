@@ -1,4 +1,4 @@
-import {UserConversation} from '../cache/session';
+import {UserConversation} from '../cache/conversation-manager';
 
 export default abstract class Dialog {
   public type: string;

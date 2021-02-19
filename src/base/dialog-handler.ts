@@ -1,6 +1,6 @@
-import {Collection, PartialUser, User} from 'discord.js';
 import fs from 'fs';
-import Session, {UserConversation} from '../cache/session';
+import {Collection, PartialUser, User} from 'discord.js';
+import ConversationManager, {UserConversation} from '../cache/conversation-manager';
 import Dialog from './dialog';
 
 export default class DialogHandler {
@@ -34,7 +34,7 @@ export default class DialogHandler {
     await this.dialogs.get(type).run(message, conversation);
 
     if (conversation.valid) {
-      await Session.update(user.id, conversation);
+      await ConversationManager.update(user.id, conversation);
     }
   }
 }

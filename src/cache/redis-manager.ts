@@ -1,6 +1,6 @@
 'use strict';
 import {Tedis} from 'tedis';
-import RedisDb from './db.js';
+import RedisDb from './redis-db.js';
 
 const cacheConnection = new Tedis({
   host: process.env.REDIS_HOSTNAME,
@@ -23,17 +23,17 @@ export default class RedisManager {
   private client: Tedis;
   private db: Databases;
   private static instance: RedisManager;
-  public static readonly User = 'user';
-  public static readonly Guild = 'guild';
-  public static readonly Message = 'message';
+  public static readonly Conversation = 'conversation';
+  public static readonly GuildInfo = 'guildInfo';
+  public static readonly MessageEvent = 'messageEvent';
 
 
   private constructor() {
     this.client = cacheConnection;
     this.db = {
-      user: new RedisDb(0, 300, this.client.hgetall, this.client.hmset, this.client.del),
-      guild: new RedisDb(1, 3600, this.client.get, this.client.set, this.client.del),
-      message: new RedisDb(2, 3600, this.client.get, this.client.set, this.client.del),
+      conversation: new RedisDb(0, 300, this.client.hgetall, this.client.hmset, this.client.del),
+      guildInfo: new RedisDb(1, 3600, this.client.hgetall, this.client.hmset, this.client.del),
+      messageEvent: new RedisDb(2, 3600, this.client.get, this.client.set, this.client.del),
     };
   }
 

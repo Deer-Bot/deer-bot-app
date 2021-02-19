@@ -27,7 +27,7 @@ export default class ChannelCommand extends Command {
       }
       channelId = channelIds.first().id;
     }
-    await ApiClient.post(`setGuild`, {guild: message.guild.id, channel: channelId});
+    await ApiClient.post(`setGuild`, {guildId: message.guild.id, channelId: channelId});
 
     return message.reply(MessageDecorator.okMessage());
   }

@@ -1,10 +1,10 @@
 import InputValidator from '../common/input-validator';
 import ApiClient from '../api/api-client';
 import Dialog from '../base/dialog';
-import Session, {Event, UserConversation} from '../cache/session';
+import ConversationManager, {Event, UserConversation} from '../cache/conversation-manager';
 import MessageDecorator from '../common/message-decorator';
 import {TextChannel} from 'discord.js';
-import EventMessage from '../cache/event-message';
+import EventMessageManager from '../cache/event-message-manager';
 
 export enum Steps {
   SelectEvent = 0,
@@ -35,7 +35,7 @@ export default class UpdateEventDialog extends Dialog {
 
     // Chiama la Function per prendere gli eventi dell'utente
     const {events, hasNext}: {events: Event[], hasNext: boolean} = await ApiClient.get(`getEvents`, {
-      author: message.author.id,
+      authorId: message.author.id,
       offset: 0,
       number: pageSize,
     });
@@ -62,7 +62,7 @@ export default class UpdateEventDialog extends Dialog {
 
       conversation.messageId = listMessage.id;
 
-      await Session.create(message.author.id, conversation);
+      await ConversationManager.create(message.author.id, conversation);
     } else {
       message.author.send(MessageDecorator.noEventList());
       conversation.valid = false;
@@ -92,7 +92,7 @@ export default class UpdateEventDialog extends Dialog {
           (message.reaction.toString() === MessageDecorator.prevEmoji && conversation.offset > 0))) {
           conversation.offset += (message.reaction.toString() === MessageDecorator.nextEmoji) ? pageSize : -pageSize; // avanti o indietro
           const {events, hasNext}: {events: Event[], hasNext: boolean} = await ApiClient.get(`getEvents`, {
-            author: conversation.events[0].author,
+            authorId: conversation.events[0].authorId,
             offset: conversation.offset,
             number: pageSize,
           });
@@ -138,25 +138,25 @@ export default class UpdateEventDialog extends Dialog {
           }
         } else if (MessageDecorator.confirmEmoji === message.reaction.toString()) {
           // Conferma
-          const {eventId} = await ApiClient.post('setEvent', {user: event.author}); // Update event in DB
+          const {eventId} = await ApiClient.post('setEvent', {userId: event.authorId}); // Update event in DB
           conversation.valid = false;
 
           // Get default channel and publish event
-          const {guild} = await ApiClient.get('getGuild', {guild: event.guild});
-          const targetGuild = await message.client.guilds.fetch(guild.guild);
-          const targetChannel = await targetGuild.channels.cache.get(guild.channel) as TextChannel;
+          const {guild} = await ApiClient.get('getGuild', {guildId: event.guildId});
+          const targetGuild = await message.client.guilds.fetch(guild.guildId);
+          const targetChannel = await targetGuild.channels.cache.get(guild.channelId) as TextChannel;
           const publicEventMessage = await MessageDecorator.eventEmbed(message.client, event, false);
 
           const publishedEventMessage = await targetChannel.send(publicEventMessage);
           publishedEventMessage.react(MessageDecorator.confirmEmoji);
           await message.channel.send(MessageDecorator.okMessage());
           if (event.id) {
-            await EventMessage.delete(event.messageId);
+            await EventMessageManager.delete(event.messageId);
             targetChannel.messages.delete(event.messageId)
                 .catch((err) => {});
           }
 
-          await EventMessage.set(publishedEventMessage.id, eventId, event.author);
+          await EventMessageManager.set(publishedEventMessage.id, eventId, event.authorId);
         } else if (MessageDecorator.deleteEmoji === message.reaction.toString()) {
           // Elimina
 
@@ -172,9 +172,9 @@ export default class UpdateEventDialog extends Dialog {
       case Steps.ConfirmDelete:
         if (MessageDecorator.confirmEmoji === message.reaction.toString()) {
           if (event.id) {
-            await ApiClient.delete('deleteEvent', {user: event.author});
+            await ApiClient.delete('deleteEvent', {userId: event.authorId});
           } else {
-            await Session.delete(event.author);
+            await ConversationManager.delete(event.authorId);
           }
           conversation.valid = false;
           await message.channel.send(MessageDecorator.removedEventMessage());
@@ -198,7 +198,7 @@ export default class UpdateEventDialog extends Dialog {
         event.description = trimmedMessage;
         await this.sendSelectedEvent(message, conversation);
         break;
-
+        // TODO ; Gestire timezone
       case Steps.ChangeDate:
         trimmedMessage = message.content.trim();
         const date = trimmedMessage;

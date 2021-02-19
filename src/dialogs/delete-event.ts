@@ -1,6 +1,6 @@
 import ApiClient from '../api/api-client';
 import Dialog from '../base/dialog';
-import Session, {Event, UserConversation} from '../cache/session';
+import ConversationManager, {Event, UserConversation} from '../cache/conversation-manager';
 import MessageDecorator from '../common/message-decorator';
 
 export enum Steps {
@@ -26,7 +26,7 @@ export default class DeleteEventDialog extends Dialog {
 
     // Chiama la Function per prendere gli eventi dell'utente
     const {events, hasNext}: {events: Event[], hasNext: boolean} = await ApiClient.get(`getEvents`, {
-      author: message.author.id,
+      authorId: message.author.id,
       offset: 0,
       number: pageSize,
     });
@@ -53,7 +53,7 @@ export default class DeleteEventDialog extends Dialog {
 
       conversation.messageId = listMessage.id;
 
-      await Session.create(message.author.id, conversation);
+      await ConversationManager.create(message.author.id, conversation);
     } else {
       message.author.send(MessageDecorator.noEventList());
       conversation.valid = false;
@@ -77,7 +77,7 @@ export default class DeleteEventDialog extends Dialog {
           (message.reaction.toString() === MessageDecorator.prevEmoji && conversation.offset > 0))) {
           conversation.offset += (message.reaction.toString() === MessageDecorator.nextEmoji) ? pageSize : -pageSize; // avanti o indietro
           const {events, hasNext}: {events: Event[], hasNext: boolean} = await ApiClient.get(`getEvents`, {
-            author: conversation.events[0].author,
+            authorId: conversation.events[0].authorId,
             offset: conversation.offset,
             number: pageSize,
           });
@@ -95,7 +95,7 @@ export default class DeleteEventDialog extends Dialog {
       case Steps.ChooseActions:
 
         if (MessageDecorator.cancelEmoji === message.reaction.toString()) {
-          await Session.delete(event.author);
+          await ConversationManager.delete(event.authorId);
           conversation.valid = false;
           await message.channel.send(MessageDecorator.message('Nothing has happened.'));
         } else if (MessageDecorator.deleteEmoji === message.reaction.toString()) {
@@ -112,14 +112,14 @@ export default class DeleteEventDialog extends Dialog {
         // Elimina o annulla
         if (MessageDecorator.confirmEmoji === message.reaction.toString()) {
           if (event.id) {
-            await ApiClient.delete('deleteEvent', {user: event.author});
+            await ApiClient.delete('deleteEvent', {userId: event.authorId});
           } else {
-            await Session.delete(event.author);
+            await ConversationManager.delete(event.authorId);
           }
           conversation.valid = false;
           await message.channel.send(MessageDecorator.removedEventMessage());
         } else if (MessageDecorator.cancelEmoji === message.reaction.toString()) {
-          await Session.delete(event.author);
+          await ConversationManager.delete(event.authorId);
           conversation.valid = false;
           await message.channel.send(MessageDecorator.message('Nothing has happened.'));
         }

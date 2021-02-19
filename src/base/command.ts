@@ -17,7 +17,6 @@ export default abstract class Command {
   protected guildOnly: boolean;
   protected dmOnly: boolean;
   protected usage: string;
-  protected endpoint: string;
 
   constructor(client: Client, commandOptions: CommandOptions) {
     this.name = commandOptions.name;
@@ -25,8 +24,6 @@ export default abstract class Command {
     this.guildOnly = commandOptions.guildOnly || false;
     this.dmOnly = commandOptions.dmOnly || false;
     this.usage = commandOptions.usage || '';
-
-    this.endpoint = process.env.API_ENDPOINT;
   }
 
   public async execute(message: EnrichedMessage, args: string[]): Promise<any> {

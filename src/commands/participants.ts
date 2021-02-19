@@ -13,7 +13,6 @@ export default class ParticipantsCommand extends Command {
     });
   }
 
-
   protected run(message: EnrichedMessage, args: string[]): Promise<any> {
     return ParticipantsDialog.start(message);
   }

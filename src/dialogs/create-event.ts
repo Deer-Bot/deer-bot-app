@@ -2,10 +2,10 @@ import {TextChannel} from 'discord.js';
 import InputValidator from '../common/input-validator';
 import ApiClient from '../api/api-client';
 import Dialog from '../base/dialog';
-import Session, {UserConversation} from '../cache/session';
+import ConversationManager, {UserConversation} from '../cache/conversation-manager';
 import MessageDecorator from '../common/message-decorator';
 import {Steps as UpdateSteps} from './update-event';
-import EventMessage from '../cache/event-message';
+import EventMessageManager from '../cache/event-message-manager';
 
 
 enum Steps {
@@ -26,20 +26,20 @@ export default class CreateEventDialog extends Dialog {
   }
 
   static async start(message: EnrichedMessage, guildId: string): Promise<void> {
-    const {channelId} = await ApiClient.get('getGuild', {guild: guildId});
+    const {guild} = await ApiClient.get('getGuild', {guildId: guildId});
     const conversation: UserConversation = {
       type: 'create',
       step: Steps.EnterTitle,
       valid: true,
       events: [
         {
-          guild: guildId,
-          author: message.author.id,
-          channel: channelId,
+          guildId: guildId,
+          authorId: message.author.id,
+          channelId: guild.channelId,
         },
       ],
     };
-    await Session.create(message.author.id, conversation);
+    await ConversationManager.create(message.author.id, conversation);
     await message.author.send(MessageDecorator.inputTitle());
     await message.reply(MessageDecorator.message('Check your DMs.'));
   }
@@ -70,6 +70,7 @@ export default class CreateEventDialog extends Dialog {
         conversation.step = Steps.EnterDate;
         break;
 
+        // TODO: Adattare per la timezone.
       case Steps.EnterDate:
         const date = trimmedMessage;
         if (!InputValidator.validateDate(date)) {
@@ -148,20 +149,20 @@ export default class CreateEventDialog extends Dialog {
       case Steps.ChooseAction:
         if (message.reaction.toString() === MessageDecorator.confirmEmoji) {
           // Chiama la funzione che crea l'evento nel database e invalida la sessione
-          const {eventId} = await ApiClient.post('setEvent', {user: event.author});
+          const {eventId} = await ApiClient.post('setEvent', {userId: event.authorId});
           conversation.valid = false;
 
           // Prende la guild in cui pubblicare l'evento e lo pubblica
-          const {guild} = await ApiClient.get('getGuild', {guild: event.guild});
-          const targetGuild = await message.client.guilds.fetch(guild.guild);
-          const targetChannel = await targetGuild.channels.cache.get(guild.channel);
+          const {guild} = await ApiClient.get('getGuild', {guildId: event.guildId});
+          const targetGuild = await message.client.guilds.fetch(guild.guildId);
+          const targetChannel = await targetGuild.channels.cache.get(guild.channelId);
           const publicEventMessage = await MessageDecorator.eventEmbed(message.client, event, false);
 
           const publishedEventMessage = await (targetChannel as TextChannel).send(publicEventMessage);
           publishedEventMessage.react(MessageDecorator.confirmEmoji);
           await message.channel.send(MessageDecorator.okMessage());
 
-          await EventMessage.set(publishedEventMessage.id, eventId, event.author);
+          await EventMessageManager.set(publishedEventMessage.id, eventId, event.authorId);
         } else if (message.reaction.toString() === MessageDecorator.editEmoji) {
           // Modifica dell'evento
           const embed = MessageDecorator.updateEventEmbed();
@@ -187,7 +188,7 @@ export default class CreateEventDialog extends Dialog {
       case Steps.ConfirmDelete:
         // Elimina o annulla
         if (MessageDecorator.confirmEmoji === message.reaction.toString()) {
-          await Session.delete(event.author);
+          await ConversationManager.delete(event.authorId);
           conversation.valid = false;
           await message.channel.send(MessageDecorator.removedEventMessage());
         } else if (MessageDecorator.cancelEmoji === message.reaction.toString()) {

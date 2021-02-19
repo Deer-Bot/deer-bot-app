@@ -1,18 +1,18 @@
 'use strict';
-import ApiClient from '../api/api-client';
 import RedisManager from './redis-manager';
+import ApiClient from '../api/api-client';
 
 
-export default class EventMessage {
+export default class EventMessageManager {
   private static client = RedisManager.getInstance();
-  private static db = RedisManager.Message;
+  private static db = RedisManager.MessageEvent;
 
   static async get(messageId: string): Promise<string> {
     if (messageId == undefined) {
       throw new Error('Argument messageId cannot be undefined');
     }
 
-    let eventId = await EventMessage.client.get(messageId, EventMessage.db) as string;
+    let eventId = await EventMessageManager.client.get(messageId, EventMessageManager.db) as string;
     if (eventId == null) {
       // Lettura dell'id dal db
       const {event} = await ApiClient.get('getEventByMessage', {messageId: messageId});
@@ -24,7 +24,7 @@ export default class EventMessage {
     }
 
     // Set nella cache
-    await EventMessage.client.set(messageId, eventId, EventMessage.db);
+    await EventMessageManager.client.set(messageId, eventId, EventMessageManager.db);
 
     return eventId;
   }
@@ -33,10 +33,10 @@ export default class EventMessage {
   static async set(messageId: string, eventId: string, authorId: string): Promise<void> {
     // Salva l'id nel db
     await ApiClient.post(`setMessage`, {messageId: messageId, eventId: eventId, authorId: authorId});
-    await EventMessage.client.set(messageId, eventId, EventMessage.db);
+    await EventMessageManager.client.set(messageId, eventId, EventMessageManager.db);
   }
 
   static async delete(messageId: string): Promise<void> {
-    await EventMessage.client.del(messageId, EventMessage.db);
+    await EventMessageManager.client.del(messageId, EventMessageManager.db);
   }
 }

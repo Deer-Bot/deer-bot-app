@@ -1,4 +1,4 @@
-import Session, {Event, UserConversation} from '../cache/session';
+import ConversationManager, {Event, UserConversation} from '../cache/conversation-manager';
 import Dialog from '../base/dialog';
 import ApiClient from '../api/api-client';
 import MessageDecorator from '../common/message-decorator';
@@ -28,7 +28,7 @@ export default class ParticipantsDialog extends Dialog {
 
     // Chiama la Function per prendere gli eventi dell'utente
     const {events, hasNext}: {events: Event[], hasNext: boolean} = await ApiClient.get(`getEvents`, {
-      author: message.author.id,
+      authorId: message.author.id,
       offset: 0,
       number: eventsPageSize,
     });
@@ -55,7 +55,7 @@ export default class ParticipantsDialog extends Dialog {
 
       conversation.messageId = listMessage.id;
 
-      await Session.create(message.author.id, conversation);
+      await ConversationManager.create(message.author.id, conversation);
     } else {
       message.author.send(MessageDecorator.noEventList());
       conversation.valid = false;
@@ -89,7 +89,7 @@ export default class ParticipantsDialog extends Dialog {
           (message.reaction.toString() === MessageDecorator.prevEmoji && conversation.offset > 0))) {
           conversation.offset += (message.reaction.toString() === MessageDecorator.nextEmoji) ? eventsPageSize : -eventsPageSize; // avanti o indietro
           const {events, hasNext}: {events: Event[], hasNext: boolean} = await ApiClient.get(`getEvents`, {
-            author: conversation.events[0].author,
+            authorId: conversation.events[0].authorId,
             offset: conversation.offset,
             number: eventsPageSize,
           });
@@ -136,7 +136,7 @@ export default class ParticipantsDialog extends Dialog {
     } else {
       embed = MessageDecorator.noParticipantsList();
 
-      await Session.delete(event.author);
+      await ConversationManager.delete(event.authorId);
       conversation.valid = false;
     }
 

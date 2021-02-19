@@ -3,13 +3,13 @@
 require('dotenv').config();
 import path from 'path';
 import Discord, {MessageReaction} from 'discord.js';
-import Prefix from './cache/prefix.js';
-import Session from './cache/session';
+import GuildInfoManager from './cache/guild-info-manager';
+import ConversationManager from './cache/conversation-manager';
+import EventMessageManager from './cache/event-message-manager';
 import DialogHandler from './base/dialog-handler';
-import CommandHandler from './base/command-handler.js';
-import EventMessage from './cache/event-message.js';
-import MessageDecorator from './common/message-decorator.js';
-import ApiClient from './api/api-client.js';
+import CommandHandler from './base/command-handler';
+import MessageDecorator from './common/message-decorator';
+import ApiClient from './api/api-client';
 
 const client = new Discord.Client() as EnrichedClient;
 client.dialogs = new DialogHandler(path.resolve(__dirname, 'dialogs'));
@@ -25,7 +25,7 @@ client.on('message', async (message: EnrichedMessage) => {
   }
 
   if (message.channel.type == 'dm') {
-    const conversation = await Session.get(message.author.id);
+    const conversation = await ConversationManager.get(message.author.id);
     if (conversation != undefined) {
       // Checks if the current message is part of the conversation
       if (client.dialogs.expect(message, conversation)) {
@@ -42,12 +42,12 @@ client.on('message', async (message: EnrichedMessage) => {
   // Prefix del server o quello di default
   let prefix: string;
   try {
-    prefix = await Prefix.get(message.guild?.id);
+    prefix = (await GuildInfoManager.get(message.guild?.id)).prefix;
   } catch (err) {
     console.log(err);
   }
 
-  message.prefix = prefix || Prefix.defaultPrefix;
+  message.prefix = prefix || GuildInfoManager.defaultPrefix;
   if (!message.content.startsWith(message.prefix)) {
     return;
   }
@@ -77,7 +77,7 @@ const handleReaction = async (messageReaction: MessageReaction, user: Discord.Us
   message.reaction = messageReaction.emoji;
 
   if (message.channel.type === 'dm') {
-    const conversation = await Session.get(user.id);
+    const conversation = await ConversationManager.get(user.id);
     if (conversation != null && message.id === conversation.messageId) {
       client.dialogs.continue(message, conversation, user)
           .catch((err: any) => {
@@ -91,7 +91,7 @@ const handleReaction = async (messageReaction: MessageReaction, user: Discord.Us
     message.author.id === client.user.id &&
     message.reaction.toString() === MessageDecorator.confirmEmoji
   ) {
-    const eventId = await EventMessage.get(message.id);
+    const eventId = await EventMessageManager.get(message.id);
     if (eventId == null) {
       return;
     }
