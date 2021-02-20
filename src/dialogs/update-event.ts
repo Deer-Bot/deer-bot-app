@@ -5,6 +5,7 @@ import ConversationManager, {Event, UserConversation} from '../cache/conversatio
 import MessageDecorator from '../common/message-decorator';
 import {TextChannel} from 'discord.js';
 import EventMessageManager from '../cache/event-message-manager';
+import GuildInfoManager from '../cache/guild-info-manager';
 
 export enum Steps {
   SelectEvent = 0,
@@ -71,12 +72,9 @@ export default class UpdateEventDialog extends Dialog {
 
   async run(message: EnrichedMessage, conversation: UserConversation): Promise<void> {
     const [event] = conversation.events;
-    let trimmedMessage;
-    let day;
-    let month;
-    let year;
-    let now;
-    let inputDate;
+    const trimmedMessage = message.content.trim();
+    let timezoneOffset;
+    let result;
 
     switch (conversation.step) {
       case Steps.SelectEvent:
@@ -184,13 +182,11 @@ export default class UpdateEventDialog extends Dialog {
         break;
 
       case Steps.ChangeTitle:
-        trimmedMessage = message.content.trim();
         event.name = trimmedMessage;
         await this.sendSelectedEvent(message, conversation);
         break;
 
       case Steps.ChangeDescription:
-        trimmedMessage = message.content.trim();
         if (trimmedMessage.length > 2048) {
           await message.channel.send(MessageDecorator.inputDescription(false));
           break;
@@ -198,52 +194,37 @@ export default class UpdateEventDialog extends Dialog {
         event.description = trimmedMessage;
         await this.sendSelectedEvent(message, conversation);
         break;
-        // TODO ; Gestire timezone
       case Steps.ChangeDate:
-        trimmedMessage = message.content.trim();
         const date = trimmedMessage;
-        if (!InputValidator.validateDate(date)) {
-          await message.channel.send(MessageDecorator.inputDate('patternError'));
-          break;
-        }
-        [day, month, year] = date.split('-').map((value) => Number.parseInt(value));
+        timezoneOffset = (await GuildInfoManager.get(event.guildId)).timezoneOffset;
+        result = InputValidator.validateDateUpdate(date, new Date(event.date), timezoneOffset);
 
-        // Compare new date with current date
-        now = new Date(Date.now());
-        const prevDate = new Date(event.date);
-        inputDate = new Date(year, month - 1, day, prevDate.getHours(), prevDate.getMinutes());
-        if (inputDate.getTime() < now.getTime()) {
-          await message.channel.send(MessageDecorator.inputDate('timeError'));
+        if (result === 'patternError' || result === 'timeError') {
+          await message.channel.send(MessageDecorator.inputDate(result));
           break;
         }
-        event.date = inputDate;
+
+        event.date = result;
+        event.localDate = MessageDecorator.formatDate(event.date, timezoneOffset);
         await this.sendSelectedEvent(message, conversation);
         break;
 
       case Steps.ChangeTime:
-        trimmedMessage = message.content.trim();
         const time = trimmedMessage;
-        if (!InputValidator.validateTime(time)) {
-          await message.channel.send(MessageDecorator.inputTime('patternError'));
-          break;
-        }
-        const currentDate = new Date(event.date);
-        [day, month, year] = [currentDate.getUTCDate(), currentDate.getUTCMonth(), currentDate.getUTCFullYear()];
-        const [hours, minutes] = time.split(':').map((value) => Number.parseInt(value));
+        timezoneOffset = (await GuildInfoManager.get(event.guildId)).timezoneOffset;
+        result = InputValidator.validateDateTimeUpdate(new Date(event.date), time, timezoneOffset);
 
-        now = new Date(Date.now());
-        inputDate = new Date(Date.UTC(year, month, day, hours, minutes));
-        // Compare current time with new time
-        if (inputDate.getTime() < now.getTime()) {
-          await message.channel.send(MessageDecorator.inputTime('timeError'));
+        if (result === 'patternError' || result === 'timeError') {
+          await message.channel.send(MessageDecorator.inputTime(result));
           break;
         }
-        event.date = inputDate;
+
+        event.date = result;
+        event.localDate = MessageDecorator.formatDate(event.date, timezoneOffset);
         await this.sendSelectedEvent(message, conversation);
         break;
 
       case Steps.ChangeGlobalReminder:
-        trimmedMessage = message.content.trim();
         const globalReminder = trimmedMessage;
         const globalReminderInt = Number.parseInt(globalReminder);
         if (!InputValidator.validateNumber(globalReminder) || globalReminderInt == NaN || globalReminderInt <= 0) {
@@ -255,7 +236,6 @@ export default class UpdateEventDialog extends Dialog {
         break;
 
       case Steps.ChangePrivateReminder:
-        trimmedMessage = message.content.trim();
         const privateReminder = trimmedMessage;
         if (!InputValidator.validateTime(privateReminder)) {
           await message.channel.send(MessageDecorator.inputTime('patternError'));

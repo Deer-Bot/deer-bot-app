@@ -5,11 +5,6 @@ const pads = (s: number): string => {
   return s < 10 ? `0${s}` : `${s}`;
 };
 
-const dateToString = (date: Date): string => {
-  const dateString = [pads(date.getUTCDate()), pads(date.getUTCMonth() + 1), pads(date.getUTCFullYear())].join('-');
-  return `${dateString} at ${date.getUTCHours()}:${pads(date.getUTCMinutes())}`;
-};
-
 const gold = '#FFD700';
 
 export default class MessageDecorator {
@@ -22,18 +17,16 @@ export default class MessageDecorator {
   public static deleteEmoji = '🗑';
   public static cancelEmoji = '❎';
 
-  // TODO: cambiare per adattare la timezone
   public static async eventEmbed(client: Client, event: Event, isAuthor: boolean): Promise<MessageEmbed> {
     const guild = await client.guilds.fetch(event.guildId);
     const member = await guild.members.fetch(event.authorId);
     const minutes = event.privateReminder % 60;
-    const date = new Date(event.date);
 
     const embed = new MessageEmbed();
     embed.setTitle(event.name)
         .setDescription(event.description)
         .setAuthor(member.displayName, member.user.displayAvatarURL())
-        .addField('Date', dateToString(date) )
+        .addField('Date', event.localDate)
         .setColor(gold);
 
     if (isAuthor) {
@@ -59,7 +52,7 @@ export default class MessageDecorator {
       const event = events[i];
       const guild = await client.guilds.fetch(event.guildId);
       eventNames.push(`**${i + 1}.** ${event.name}`);
-      eventDates.push(dateToString(new Date(event.date)));
+      eventDates.push(event.localDate);
       const participants = `${event.participants ? event.participants.length : 0} ${event.participants?.length == 1 ? 'person' : 'people'} will participate`;
       serverAndParticipants.push(`${guild.name} **-** ${participants}`);
     }
@@ -219,5 +212,14 @@ export default class MessageDecorator {
     const msg = message ? message : 'Something went wrong while executing the command.';
 
     return MessageDecorator.message(msg).setColor('RED');
+  }
+
+  public static formatDate(date: Date, timezoneOffset: number): string {
+    const localDate = new Date(date.getTime());
+    localDate.setUTCHours(localDate.getUTCHours() + timezoneOffset);
+    const [year, month, day, hours, minutes] = [localDate.getUTCFullYear(), localDate.getUTCMonth(), localDate.getUTCDate(), localDate.getUTCHours(), localDate.getUTCMinutes()];
+    const timeZone = timezoneOffset > 0 ? `+${timezoneOffset}` : `${timezoneOffset}`;
+
+    return `${pads(day)}/${pads(month)}/${year} at ${pads(hours)}:${pads(minutes)} GMT${timezoneOffset == 0 ? '' : timeZone}`;
   }
 }

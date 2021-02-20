@@ -6,6 +6,7 @@ import ConversationManager, {UserConversation} from '../cache/conversation-manag
 import MessageDecorator from '../common/message-decorator';
 import {Steps as UpdateSteps} from './update-event';
 import EventMessageManager from '../cache/event-message-manager';
+import GuildInfoManager from '../cache/guild-info-manager';
 
 
 enum Steps {
@@ -45,14 +46,10 @@ export default class CreateEventDialog extends Dialog {
   }
 
   async run(message: EnrichedMessage, conversation: UserConversation): Promise<void> {
-    let now: Date;
-    let inputDate: Date;
-    let day: number;
-    let month: number;
-    let year: number;
-
+    let timezoneOffset: number;
     const trimmedMessage = message.content.trim();
     const event = conversation.events[0];
+
     switch (conversation.step) {
       case Steps.EnterTitle:
         event.name = trimmedMessage;
@@ -70,21 +67,12 @@ export default class CreateEventDialog extends Dialog {
         conversation.step = Steps.EnterDate;
         break;
 
-        // TODO: Adattare per la timezone.
       case Steps.EnterDate:
         const date = trimmedMessage;
-        if (!InputValidator.validateDate(date)) {
-          await message.author.send(MessageDecorator.inputDate('patternError'));
-          break;
-        }
-        [day, month, year] = date.split('-').map((value) => Number.parseInt(value));
-
-        now = new Date(Date.now());
-        now = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0);
-        inputDate = new Date(year, month - 1, day);
-
-        if (inputDate.getTime() < now.getTime()) {
-          await message.author.send(MessageDecorator.inputDate('timeError'));
+        timezoneOffset = (await GuildInfoManager.get(event.guildId)).timezoneOffset;
+        const status = InputValidator.validateDate(date, timezoneOffset);
+        if (status !== 'ok') {
+          await message.author.send(MessageDecorator.inputDate(status));
           break;
         }
 
@@ -95,22 +83,15 @@ export default class CreateEventDialog extends Dialog {
 
       case Steps.EnterTime:
         const time = trimmedMessage;
-        if (!InputValidator.validateTime(time)) {
-          await message.author.send(MessageDecorator.inputTime('patternError'));
-          break;
-        }
-        [day, month, year] = (event.date as string).split('-').map((value) => Number.parseInt(value));
-        const [hours, minutes] = time.split(':').map((value) => Number.parseInt(value));
-
-        now = new Date(Date.now());
-        inputDate = new Date(Date.UTC(year, month - 1, day, hours, minutes));
-
-        if (inputDate.getTime() < now.getTime()) {
-          await message.author.send(MessageDecorator.inputTime('timeError'));
+        timezoneOffset = (await GuildInfoManager.get(event.guildId)).timezoneOffset;
+        const result = InputValidator.validateDateTime(event.date as string, time, timezoneOffset);
+        if (result === 'patternError' || result === 'timeError') {
+          await message.author.send(MessageDecorator.inputTime(result));
           break;
         }
 
-        event.date = inputDate;
+        event.date = result;
+        event.localDate = MessageDecorator.formatDate(event.date, timezoneOffset);
         await message.author.send(MessageDecorator.inputGlobalReminder());
         conversation.step = Steps.EnterGlobalReminder;
         break;
@@ -212,3 +193,5 @@ export default class CreateEventDialog extends Dialog {
     return false;
   }
 }
+
+

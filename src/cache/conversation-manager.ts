@@ -27,6 +27,7 @@ export interface Event {
   name?: string,
   description?: string,
   date?: Date | string,
+  localDate?: string,
   globalReminder?: number,
   privateReminder?: number,
   globalReminderDate?: Date | string,
