@@ -103,14 +103,14 @@ export default class MessageDecorator {
   public static inputDate(error?: 'patternError' | 'timeError'): MessageEmbed {
     let msg ='Type a date for your event';
     if (error == 'patternError') {
-      msg = 'Date format must be dd-mm-yyyy.';
+      msg = 'Date format must be **dd/mm/yyyy**.';
     } else if (error == 'timeError') {
       msg = 'You cannot travel through time, choose a valid date.';
     }
 
     const embed = new MessageEmbed().setTitle(msg).setColor(error ? 'RED' : gold);
     if (!error) {
-      embed.setDescription('Use the format dd-mm-yyyy');
+      embed.setDescription('Use the format **dd/mm/yyyy**.');
     }
 
     return embed;
@@ -119,31 +119,31 @@ export default class MessageDecorator {
   public static inputTime(error?: 'patternError' | 'timeError'): MessageEmbed {
     let msg ='Type the time';
     if (error == 'patternError') {
-      msg = 'Time format must be hh:mm.';
+      msg = 'Time format must be **hh:mm**.';
     } else if (error == 'timeError') {
       msg = 'You cannot travel through time, choose a valid time.';
     }
 
     const embed = new MessageEmbed().setTitle(msg).setColor(error ? 'RED' : gold);
     if (!error) {
-      embed.setDescription('Use the format hh:mm');
+      embed.setDescription('Use the format **hh:mm**.');
     }
 
     return embed;
   }
 
   public static inputGlobalReminder(error?: 'patternError'): MessageEmbed {
-    const msg = error == 'patternError' ? 'It must be a positive number': 'How often (in days) should I remind about your event in the server channel?';
+    const msg = error == 'patternError' ? 'It must be a positive number.': 'How often (in days) should I remind about your event in the server channel?';
 
     return new MessageEmbed().setTitle(msg).setColor(error ? 'RED' : gold);
   }
 
   public static inputPrivateReminder(error?: 'patternError'): MessageEmbed {
-    const msg = error == 'patternError' ? 'Time format must be hh:mm': 'How many hours before your event should I notify the participants?';
+    const msg = error == 'patternError' ? 'Time format must be **hh:mm**, maximum 24 hours.': 'How many hours before your event should I notify the participants?';
 
     const embed = new MessageEmbed().setTitle(msg).setColor(error ? 'RED' : gold);
     if (!error) {
-      embed.setDescription('Use the format hh:mm');
+      embed.setDescription('Use the format **hh** or **hh:mm**, maximum 24 hours.');
     }
 
     return embed;

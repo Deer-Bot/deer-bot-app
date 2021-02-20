@@ -1,6 +1,6 @@
-// TODO: aggiungere gli '/'
-const dateRegex = new RegExp(/^(?:(?:31(-)(?:0?[13578]|1[02]))\1|(?:(?:29|30)(-)(?:0?[13-9]|1[0-2])\2))(?:(?:1[6-9]|[2-9]\d)\d{2})$|^(?:29(-)0?2\3(?:(?:(?:1[6-9]|[2-9]\d)(?:0[48]|[2468][048]|[13579][26])|(?:(?:16|[2468][048]|[3579][26])00))))$|^(?:0?[1-9]|1\d|2[0-8])(-)(?:(?:0?[1-9])|(?:1[0-2]))\4(?:(?:1[6-9]|[2-9]\d)\d{2})$/);
-const timeRegex = new RegExp(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/);
+const dateRegex = new RegExp(/^(?:(?:31(\/)(?:0?[13578]|1[02]))\1|(?:(?:29|30)(\/)(?:0?[13-9]|1[0-2])\2))(?:(?:1[6-9]|[2-9]\d)\d{2})$|^(?:29(\/)0?2\3(?:(?:(?:1[6-9]|[2-9]\d)(?:0[48]|[2468][048]|[13579][26])|(?:(?:16|[2468][048]|[3579][26])00))))$|^(?:0?[1-9]|1\d|2[0-8])(\/)(?:(?:0?[1-9])|(?:1[0-2]))\4(?:(?:1[6-9]|[2-9]\d)\d{2})$/);
+const timeRegex = new RegExp(/^(?:(?:[01]?[0-9]|2[0-3]):[0-5][0-9]|24:00)$/);
+const hourRegex = new RegExp(/^([01]?[0-9]|2[0-4])$/);
 const numberRegex = new RegExp(/^\d+$/);
 const timezoneRegex = new RegExp(/^(?:\+|-)?(?:0|[1-9]|1[0-2])$/);
 
@@ -11,7 +11,7 @@ export default class InputValidator {
       return 'patternError';
     }
 
-    const [day, month, year] = date.split('-').map((value) => Number.parseInt(value));
+    const [day, month, year] = date.split('/').map((value) => Number.parseInt(value));
     const now = new Date(Date.now());
 
     // Data "attuale"(fittizia dell'utente) dell'utente in base alla sua timezone (serve per vedere se in base al fusorario il giorno è già passato)
@@ -44,7 +44,7 @@ export default class InputValidator {
     if (!timeRegex.test(time)) {
       return 'patternError';
     }
-    const [day, month, year] = date.split('-').map((value) => Number.parseInt(value));
+    const [day, month, year] = date.split('/').map((value) => Number.parseInt(value));
     const [hours, minutes] = time.split(':').map((value) => Number.parseInt(value));
 
     const now = new Date(Date.now());
@@ -62,7 +62,7 @@ export default class InputValidator {
       return 'patternError';
     }
 
-    const [day, month, year] = date.split('-').map((value) => Number.parseInt(value));
+    const [day, month, year] = date.split('/').map((value) => Number.parseInt(value));
     const now = new Date(Date.now());
 
     const currentUserDate = new Date(
@@ -106,7 +106,7 @@ export default class InputValidator {
   }
 
   public static validateTime(time: string): boolean {
-    return timeRegex.test(time);
+    return timeRegex.test(time) || hourRegex.test(time);
   }
 
   public static validateNumber(number: string): boolean {

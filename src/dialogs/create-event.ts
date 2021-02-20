@@ -111,11 +111,11 @@ export default class CreateEventDialog extends Dialog {
       case Steps.EnterPrivateReminder:
         const privateReminder = trimmedMessage;
         if (!InputValidator.validateTime(privateReminder)) {
-          await message.author.send(MessageDecorator.inputTime('patternError'));
+          await message.author.send(MessageDecorator.inputPrivateReminder('patternError'));
           break;
         }
         const [hours_, minutes_] = privateReminder.split(':');
-        const min: number = Number.parseInt(hours_) * 60 + Number.parseInt(minutes_);
+        const min: number = Number.parseInt(hours_) * 60 + (minutes_ != undefined ? Number.parseInt(minutes_) : 0);
         event.privateReminder = min;
         const messageEmbed = await MessageDecorator.eventEmbed(message.client, event, true);
         await message.author.send(MessageDecorator.confirmMessage());

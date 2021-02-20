@@ -238,11 +238,11 @@ export default class UpdateEventDialog extends Dialog {
       case Steps.ChangePrivateReminder:
         const privateReminder = trimmedMessage;
         if (!InputValidator.validateTime(privateReminder)) {
-          await message.channel.send(MessageDecorator.inputTime('patternError'));
+          await message.channel.send(MessageDecorator.inputPrivateReminder('patternError'));
           break;
         }
         const [hours_, minutes_] = privateReminder.split(':');
-        const min: number = Number.parseInt(hours_) * 60 + Number.parseInt(minutes_);
+        const min: number = Number.parseInt(hours_) * 60 + (minutes_ != undefined ? Number.parseInt(minutes_) : 0);
         event.privateReminder = min;
         await this.sendSelectedEvent(message, conversation);
         break;
