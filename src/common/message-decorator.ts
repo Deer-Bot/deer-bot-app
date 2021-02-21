@@ -44,24 +44,22 @@ export default class MessageDecorator {
     embed.setTitle('Your events')
         .setColor(gold);
 
-    const eventNames = [];
-    const eventDates = [];
-    const serverAndParticipants = [];
-
     for (let i = 0; i < events.length; i++) {
       const event = events[i];
       const guild = await client.guilds.fetch(event.guildId);
-      eventNames.push(`**${i + 1}.** ${event.name}`);
-      eventDates.push(event.localDate);
-      const participants = `${event.participants ? event.participants.length : 0} ${event.participants?.length == 1 ? 'person' : 'people'} will participate`;
-      serverAndParticipants.push(`${guild.name} **-** ${participants}`);
-    }
+      let fieldsName = ['\u200b', '\u200b', '\u200b'];
 
-    embed.addFields(
-        {name: 'Event name', value: eventNames.join('\n'), inline: true},
-        {name: 'Date', value: eventDates.join('\n'), inline: true},
-        {name: 'Server and Participants', value: serverAndParticipants.join('\n'), inline: true},
-    );
+      if (i === 0) {
+        fieldsName = ['Event name', 'Date', 'Server and participants'];
+      }
+
+      const participants = `${event.participants ? event.participants.length : 0} ${event.participants?.length == 1 ? 'person' : 'people'} will participate`;
+      embed.addFields(
+          {name: fieldsName[0], value: `**${i + 1}.** ${event.name}`, inline: true},
+          {name: fieldsName[1], value: event.localDate, inline: true},
+          {name: fieldsName[2], value: `${guild.name} **-** ${participants}`, inline: true},
+      );
+    }
 
     embed.setFooter(`Page ${page}`);
 
