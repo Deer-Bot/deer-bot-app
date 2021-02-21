@@ -28,9 +28,9 @@ export default class EventMessageManager {
   }
 
   // Salva l'id dell'evento nel db e aggiorna la cache
-  static async set(messageId: string, eventId: string, authorId: string): Promise<void> {
+  static async set(messageId: string, eventId: string, guildId: string): Promise<void> {
     // Salva l'id nel db
-    await ApiClient.post(`setMessage`, {messageId: messageId, eventId: eventId, authorId: authorId});
+    await ApiClient.post(`setMessage`, {messageId: messageId, eventId: eventId, guildId: guildId});
     await EventMessageManager.client.set(messageId, eventId, EventMessageManager.db);
   }
 

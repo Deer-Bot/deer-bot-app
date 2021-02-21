@@ -154,7 +154,7 @@ export default class UpdateEventDialog extends Dialog {
                 .catch((err) => {});
           }
 
-          await EventMessageManager.set(publishedEventMessage.id, eventId, event.authorId);
+          await EventMessageManager.set(publishedEventMessage.id, eventId, event.guildId);
         } else if (MessageDecorator.deleteEmoji === message.reaction.toString()) {
           // Elimina
 

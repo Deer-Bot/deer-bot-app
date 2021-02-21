@@ -1,6 +1,6 @@
 require('dotenv').config();
 import path from 'path';
-import Discord, {MessageReaction} from 'discord.js';
+import Discord, {MessageReaction, TextChannel} from 'discord.js';
 import GuildInfoManager from './cache/guild-info-manager';
 import ConversationManager from './cache/conversation-manager';
 import EventMessageManager from './cache/event-message-manager';
@@ -42,7 +42,7 @@ client.on('message', async (message: EnrichedMessage) => {
   try {
     prefix = (await GuildInfoManager.get(message.guild?.id)).prefix;
   } catch (err) {
-    console.log(err);
+    console.log(err.message);
   }
 
   message.prefix = prefix || GuildInfoManager.defaultPrefix;
@@ -52,8 +52,7 @@ client.on('message', async (message: EnrichedMessage) => {
 
   const {commandName, args} = getCommand(message);
 
-  client.commands.run(commandName, args, message)
-      .catch((err) => console.log(err));
+  client.commands.run(commandName, args, message);
 });
 
 client.on('messageReactionAdd', async (messageReaction, user) => {
@@ -97,6 +96,29 @@ const handleReaction = async (messageReaction: MessageReaction, user: Discord.Us
         .catch((err) => console.log(err));
   }
 };
+
+client.on('guildCreate', (guild) => {
+  let foundAChannel = false;
+
+  for (const [, channel] of guild.channels.cache) {
+    if (channel.type == 'text' && channel.permissionsFor(guild.me).has('SEND_MESSAGES')) {
+      foundAChannel = true;
+      (channel as TextChannel).send(MessageDecorator.setupMessage());
+      break;
+    }
+  }
+  if (!foundAChannel) {
+    guild.owner.send(MessageDecorator.setupMessage());
+  }
+});
+
+client.on('guildDelete', (guild) => {
+  ApiClient.delete('deleteGuildData', {guildId: guild.id})
+      .catch((err) => {
+        console.log(err.message);
+      });
+});
+
 
 client.login(process.env.DISCORD_TOKEN);
 

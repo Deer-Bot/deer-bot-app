@@ -10,14 +10,14 @@ export default class GuildInfoManager {
   private static client = RedisManager.getInstance();
   private static db = RedisManager.GuildInfo;
   public static defaultPrefix = '!';
-  public static defaultTimezone = 0;
+  public static invalidTimezone = 100;
 
   // Get the prefix for the server from DB and store it into the redis cache
   static async get(guildId: string): Promise<GuildInfo> {
     if (guildId == undefined) {
       return {
         prefix: GuildInfoManager.defaultPrefix,
-        timezoneOffset: GuildInfoManager.defaultTimezone,
+        timezoneOffset: GuildInfoManager.invalidTimezone,
       };
     }
 
@@ -27,7 +27,7 @@ export default class GuildInfoManager {
       // Lettura del prefix dal db
       const body = await ApiClient.get('getGuild', {guildId: guildId});
       guildInfo.prefix = body.guild?.prefix || GuildInfoManager.defaultPrefix;
-      guildInfo.timezoneOffset = body.guild?.timezoneOffset || GuildInfoManager.defaultTimezone;
+      guildInfo.timezoneOffset = body.guild?.timezoneOffset || GuildInfoManager.invalidTimezone;
     }
     // Set nella cache
     await GuildInfoManager.client.set(guildId, guildInfo, GuildInfoManager.db);

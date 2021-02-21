@@ -3,6 +3,7 @@ import Command from '../base/command';
 import ApiClient from '../api/api-client';
 import CreateEventDialog from '../dialogs/create-event';
 import MessageDecorator from '../common/message-decorator';
+import GuildInfoManager from '../cache/guild-info-manager';
 
 export default class CreateEventCommand extends Command {
   constructor(client: Client) {
@@ -18,6 +19,9 @@ export default class CreateEventCommand extends Command {
     const {guild} = await ApiClient.get('getGuild', {guildId: message.guild.id});
     if (guild == null || guild.channelId == undefined) {
       return message.reply(MessageDecorator.commandError('You must set a default channel before creating an event, use the `channel` command.'));
+    }
+    if (guild.timezoneOffset == GuildInfoManager.invalidTimezone) {
+      return message.reply(MessageDecorator.commandError('You must set a timezone before creating an event, use the `timezone` command.'));
     }
 
     return CreateEventDialog.start(message, guild.guildId);

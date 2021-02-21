@@ -24,7 +24,7 @@ export default class CommandHandler {
     }
   }
 
-  public async run(commandName: string, args: string[], message: EnrichedMessage): Promise<void> {
+  public run(commandName: string, args: string[], message: EnrichedMessage): void {
     if (!this.commands.has(commandName)) {
       return;
     }
@@ -32,7 +32,7 @@ export default class CommandHandler {
     this.commands.get(commandName).execute(message, args)
         .catch((err: any) => {
           message.reply(MessageDecorator.commandError());
-          console.log(err);
+          console.log(err.message);
         });
   }
 }

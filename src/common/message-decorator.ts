@@ -16,6 +16,7 @@ export default class MessageDecorator {
   public static editEmoji = '✏';
   public static deleteEmoji = '🗑';
   public static cancelEmoji = '❎';
+  public static deerEmoji = '🦌';
 
   public static async eventEmbed(client: Client, event: Event, isAuthor: boolean): Promise<MessageEmbed> {
     const guild = await client.guilds.fetch(event.guildId);
@@ -163,11 +164,11 @@ export default class MessageDecorator {
   }
 
   public static okMessage(): MessageEmbed {
-    return new MessageEmbed().setTitle('All set! 🦌').setColor(gold);
+    return new MessageEmbed().setTitle(`All set! ${MessageDecorator.deerEmoji}`).setColor(gold);
   }
 
   public static removedEventMessage(): MessageEmbed {
-    return new MessageEmbed().setTitle('Event successfully removed! 🦌').setColor(gold);
+    return new MessageEmbed().setTitle(`Event successfully removed! ${MessageDecorator.deerEmoji}`).setColor(gold);
   }
 
   public static message(message: string): MessageEmbed {
@@ -218,6 +219,17 @@ export default class MessageDecorator {
     const [year, month, day, hours, minutes] = [localDate.getUTCFullYear(), localDate.getUTCMonth(), localDate.getUTCDate(), localDate.getUTCHours(), localDate.getUTCMinutes()];
     const timeZone = timezoneOffset > 0 ? `+${timezoneOffset}` : `${timezoneOffset}`;
 
-    return `${pads(day)}/${pads(month)}/${year} at ${pads(hours)}:${pads(minutes)} GMT${timezoneOffset == 0 ? '' : timeZone}`;
+    return `${pads(day)}/${pads(month + 1)}/${year} at ${pads(hours)}:${pads(minutes)} GMT${timezoneOffset == 0 ? '' : timeZone}`;
+  }
+
+  public static setupMessage(): MessageEmbed {
+    return new MessageEmbed()
+        .setTitle('Hi, I am Deer')
+        .setDescription(`I can help you to create and manage events for your server, but first of all, use the following commands to let me know the things I need to work properly. ${MessageDecorator.deerEmoji}`)
+        .addFields(
+            {name: '!channel', value: 'To set a channel for broadcasting events', inline: true},
+            {name: '!timezone', value: 'To set up your timezone', inline: true},
+        )
+        .setColor(gold);
   }
 }

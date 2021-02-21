@@ -9,32 +9,44 @@ export default class ApiClient {
 
 
   public static async get(url: string, data?: {[index: string]: Object}): Promise<any> {
-    const res = await ApiClient.instance.get(url, {
-      params: data,
-    });
+    try {
+      const res = await ApiClient.instance.get(url, {
+        params: data,
+      });
 
-    if (res.status === 200) {
       return res.data;
-    } else {
-      throw new ApiError(`API responded with status code: ${res.status}`, res.status);
+    } catch (err) {
+      if (!err.response) {
+        throw new ApiError(`Call to function ${url} responded with error code: ${err.code}`, undefined);
+      }
+
+      throw new ApiError(`Call to function ${url} responded with status code: ${err.response.status}`, err.response.status);
     }
   }
 
   public static async post(url: string, body?: {[index: string]: Object}): Promise<any> {
-    const res = await ApiClient.instance.post(url, body);
+    try {
+      const res = await ApiClient.instance.post(url, body);
 
-    if (res.status !== 200) {
-      throw new ApiError(`API responded with status code: ${res.status}`, res.status);
+      return res.data;
+    } catch (err) {
+      if (!err.response) {
+        throw new ApiError(`Call to function ${url} responded with error code: ${err.code}`, undefined);
+      }
+
+      throw new ApiError(`Call to function ${url} responded with status code: ${err.response.status}`, err.response.status);
     }
-
-    return res.data;
   }
 
   public static async delete(url: string, body?: {[index: string]: Object}): Promise<void> {
-    const res = await ApiClient.instance.delete(url, {data: body});
+    try {
+      await ApiClient.instance.delete(url, {data: body});
+    } catch (err) {
+      if (!err.response) {
+        throw new ApiError(`Call to function ${url} responded with error code: ${err.code}`, undefined);
+      }
 
-    if (res.status !== 200) {
-      throw new ApiError(`API responded with status code: ${res.status}`, res.status);
+      throw new ApiError(`Call to function ${url} responded with status code: ${err.response.status}`, err.response.status);
     }
   }
 }
