@@ -208,10 +208,15 @@ export default class MessageDecorator {
     return MessageDecorator.message('Something went wrong during the conversation.').setColor('RED');
   }
 
-  public static commandError(message?: string) {
+  public static commandError(message?: string, description?: string) {
     const msg = message ? message : 'Something went wrong while executing the command.';
 
-    return MessageDecorator.message(msg).setColor('RED');
+    const embed = new MessageEmbed().setTitle(msg).setColor('RED');
+    if (description) {
+      embed.setDescription(description);
+    }
+
+    return embed;
   }
 
   public static formatDate(date: Date, timezoneOffset: number): string {
@@ -253,6 +258,19 @@ export default class MessageDecorator {
     commandInfo.forEach(({name, description}) => {
       embed.addField(name, description, true);
     });
+
+    return embed;
+  }
+
+  public static commandEmbed(prefix: string, {name, description, usage, guildOnly, dmOnly}: CommandInfo) {
+    const embed = new MessageEmbed();
+    embed.setTitle(name)
+        .setDescription(description)
+        .addFields(
+            {name: 'Usage', value: `${prefix}${usage}`, inline: true},
+            {name: 'Usable in', value: guildOnly ? 'Server only' : dmOnly ? 'DM only' : 'Server and DM', inline: true},
+        )
+        .setColor(gold);
 
     return embed;
   }

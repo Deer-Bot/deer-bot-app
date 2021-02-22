@@ -14,9 +14,9 @@ export default abstract class Command {
   public name: string;
   public description: string;
   protected permissions: PermissionResolvable[];
-  protected guildOnly: boolean;
-  protected dmOnly: boolean;
-  protected usage: string;
+  public guildOnly: boolean;
+  public dmOnly: boolean;
+  public usage: string;
 
   constructor(commandOptions: CommandOptions) {
     this.name = commandOptions.name;
