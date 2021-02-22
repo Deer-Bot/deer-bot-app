@@ -1,7 +1,7 @@
 import {Client} from 'discord.js';
 import Command from '../base/command';
-import ApiClient from '../api/api-client';
 import MessageDecorator from '../common/message-decorator';
+import GuildInfoManager from '../cache/guild-info-manager';
 
 export default class ChannelCommand extends Command {
   constructor(client: Client) {
@@ -25,8 +25,8 @@ export default class ChannelCommand extends Command {
       }
       channelId = channelIds.first().id;
     }
-    await ApiClient.post(`setGuild`, {guildId: message.guild.id, channelId: channelId});
 
+    await GuildInfoManager.set(message.guild.id, {channelId: channelId});
     return message.reply(MessageDecorator.okMessage());
   }
 

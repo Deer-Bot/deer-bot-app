@@ -71,7 +71,7 @@ export default class UpdateEventDialog extends Dialog {
   }
 
   async run(message: EnrichedMessage, conversation: UserConversation): Promise<void> {
-    const [event] = conversation.events;
+    let [event] = conversation.events;
     const trimmedMessage = message.content.trim();
     let timezoneOffset;
     let result;
@@ -83,6 +83,12 @@ export default class UpdateEventDialog extends Dialog {
           if (conversation.events[index] == undefined) {
             return;
           }
+          event = conversation.events[index];
+          if (event.channelId === GuildInfoManager.unspecifiedChannel) {
+            message.channel.send(MessageDecorator.commandError('An event broadcasting channel must be set in the server before updating this event, use the `channel` command and re-run the `update` command.'));
+            return;
+          }
+
           conversation.events = [conversation.events[index]];
           await this.sendSelectedEvent(message, conversation);
           return;
@@ -136,21 +142,27 @@ export default class UpdateEventDialog extends Dialog {
           }
         } else if (MessageDecorator.confirmEmoji === message.reaction.toString()) {
           // Conferma
-          const {eventId} = await ApiClient.post('setEvent', {userId: event.authorId}); // Update event in DB
+          // Ci assicuriamo che il channel in cui mandare l'evento sia quello corretto prima di inserirlo in DB
+          const guildInfo = await GuildInfoManager.get(event.guildId);
+          event.channelId = guildInfo.channelId;
+          await ConversationManager.update(event.authorId, conversation);
+
+          // Update event in DB
+          const {eventId} = await ApiClient.post('setEvent', {userId: event.authorId});
           conversation.valid = false;
 
           // Get default channel and publish event
-          const {guild} = await ApiClient.get('getGuild', {guildId: event.guildId});
-          const targetGuild = await message.client.guilds.fetch(guild.guildId);
-          const targetChannel = await targetGuild.channels.cache.get(guild.channelId) as TextChannel;
+          const targetGuild = await message.client.guilds.fetch(event.guildId);
+          const targetChannel = await targetGuild.channels.cache.get(guildInfo.channelId) as TextChannel;
           const publicEventMessage = await MessageDecorator.eventEmbed(message.client, event, false);
 
           const publishedEventMessage = await targetChannel.send(publicEventMessage);
           publishedEventMessage.react(MessageDecorator.confirmEmoji);
           await message.channel.send(MessageDecorator.okMessage());
           if (event.id) {
-            await EventMessageManager.delete(event.messageId);
-            targetChannel.messages.delete(event.messageId)
+            await EventMessageManager.delete(event.messageInfo.messageId);
+            const lastMessageChannel = await targetGuild.channels.cache.get(event.messageInfo.channelId);
+            (lastMessageChannel as TextChannel).messages.delete(event.messageInfo.messageId)
                 .catch((err) => {});
           }
 

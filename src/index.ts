@@ -2,7 +2,7 @@ require('dotenv').config();
 import path from 'path';
 import Discord, {Guild, GuildChannel, MessageEmbed, MessageReaction, TextChannel} from 'discord.js';
 import GuildInfoManager from './cache/guild-info-manager';
-import ConversationManager from './cache/conversation-manager';
+import ConversationManager, {MessageInfo} from './cache/conversation-manager';
 import EventMessageManager from './cache/event-message-manager';
 import DialogHandler from './base/dialog-handler';
 import CommandHandler from './base/command-handler';
@@ -14,6 +14,7 @@ client.dialogs = new DialogHandler(path.resolve(__dirname, 'dialogs'));
 client.commands = new CommandHandler(path.resolve(__dirname, 'commands'));
 
 client.on('ready', () => {
+  fetchOldMessages();
   console.log(`Logged in as ${client.user.tag}!`);
 });
 
@@ -122,7 +123,7 @@ client.on('channelDelete', async (channel) => {
 });
 
 
-client.login(process.env.DISCORD_TOKEN);
+client.login();
 
 function getCommand(message: EnrichedMessage) {
   const args = message.content.slice(message.prefix.length).trim().split(/ +/);
@@ -143,4 +144,19 @@ function warningMessage(guild: Guild, embed: MessageEmbed) {
   if (!foundAChannel) {
     guild.owner.send(embed);
   }
+}
+
+function fetchOldMessages(): void {
+  ApiClient.get('getAllMessageInfo')
+      .then((body) => {
+        const messageInfos: MessageInfo[] = body.messageInfos;
+        return Promise.all(messageInfos.map((messageInfo: MessageInfo) => {
+          return client.channels.fetch(messageInfo.channelId)
+              .then((channel) => (channel as TextChannel).messages.fetch(messageInfo.messageId));
+        }));
+      })
+      .catch((err) => {
+        console.log(err.message);
+        setTimeout(fetchOldMessages, 5000);
+      });
 }

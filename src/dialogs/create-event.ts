@@ -129,14 +129,18 @@ export default class CreateEventDialog extends Dialog {
 
       case Steps.ChooseAction:
         if (message.reaction.toString() === MessageDecorator.confirmEmoji) {
+          // Ci assicuriamo che il channel in cui mandare l'evento sia quello corretto prima di inserirlo in DB
+          const guildInfo = await GuildInfoManager.get(event.guildId);
+          event.channelId = guildInfo.channelId;
+          await ConversationManager.update(event.authorId, conversation);
+
           // Chiama la funzione che crea l'evento nel database e invalida la sessione
           const {eventId} = await ApiClient.post('setEvent', {userId: event.authorId});
           conversation.valid = false;
 
           // Prende la guild in cui pubblicare l'evento e lo pubblica
-          const {guild} = await ApiClient.get('getGuild', {guildId: event.guildId});
-          const targetGuild = await message.client.guilds.fetch(guild.guildId);
-          const targetChannel = await targetGuild.channels.cache.get(guild.channelId);
+          const targetGuild = await message.client.guilds.fetch(event.guildId);
+          const targetChannel = await targetGuild.channels.cache.get(guildInfo.channelId) as TextChannel;
           const publicEventMessage = await MessageDecorator.eventEmbed(message.client, event, false);
 
           const publishedEventMessage = await (targetChannel as TextChannel).send(publicEventMessage);

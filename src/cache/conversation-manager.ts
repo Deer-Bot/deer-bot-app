@@ -18,12 +18,17 @@ export interface UserConversation extends AbstractUserConversation {
   events?: Event[],
 }
 
+export interface MessageInfo {
+  channelId: string,
+  messageId: string
+}
+
 export interface Event {
   id?: string,
   authorId: string,
   guildId: string,
   channelId: string,
-  messageId?: string,
+  messageInfo?: MessageInfo,
   name?: string,
   description?: string,
   date?: Date | string,
