@@ -1,13 +1,13 @@
-import {Client} from 'discord.js';
 import Command from '../base/command';
 import MessageDecorator from '../common/message-decorator';
 import GuildInfoManager from '../cache/guild-info-manager';
 
 export default class ChannelCommand extends Command {
-  constructor(client: Client) {
-    super(client, {
+  constructor() {
+    super({
       name: 'channel',
-      permissions: ['ADMINISTRATOR'],
+      description: 'Set a event broadcasting channel for your server.',
+      permissions: ['MANAGE_GUILD'],
       guildOnly: true,
       usage: 'channel [channel name](optional)',
     });

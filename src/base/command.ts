@@ -1,8 +1,9 @@
-import {Client, PermissionResolvable} from 'discord.js';
+import {PermissionResolvable} from 'discord.js';
 import MessageDecorator from '../common/message-decorator';
 
 interface CommandOptions {
     name: string,
+    description: string
     permissions?: PermissionResolvable[],
     guildOnly?: boolean,
     dmOnly?: boolean,
@@ -11,13 +12,15 @@ interface CommandOptions {
 
 export default abstract class Command {
   public name: string;
+  public description: string;
   protected permissions: PermissionResolvable[];
   protected guildOnly: boolean;
   protected dmOnly: boolean;
   protected usage: string;
 
-  constructor(client: Client, commandOptions: CommandOptions) {
+  constructor(commandOptions: CommandOptions) {
     this.name = commandOptions.name;
+    this.description = commandOptions.description;
     this.permissions = commandOptions.permissions || null;
     this.guildOnly = commandOptions.guildOnly || false;
     this.dmOnly = commandOptions.dmOnly || false;

@@ -1,14 +1,14 @@
-import {Client} from 'discord.js';
 import Command from '../base/command';
 import CreateEventDialog from '../dialogs/create-event';
 import MessageDecorator from '../common/message-decorator';
 import GuildInfoManager from '../cache/guild-info-manager';
 
 export default class CreateEventCommand extends Command {
-  constructor(client: Client) {
-    super(client, {
+  constructor() {
+    super({
       name: 'create',
-      permissions: ['ADMINISTRATOR'],
+      description: 'Starts the creation of an event in your server.',
+      permissions: ['MANAGE_GUILD'],
       guildOnly: true,
       usage: 'create',
     });

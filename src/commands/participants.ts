@@ -1,13 +1,11 @@
-'use strict';
-
-import {Client} from 'discord.js';
 import ParticipantsDialog from '../dialogs/participants';
 import Command from '../base/command';
 
 export default class ParticipantsCommand extends Command {
-  constructor(client: Client) {
-    super(client, {
+  constructor() {
+    super({
       name: 'participants',
+      description: 'Show the participants to your events.',
       dmOnly: true,
       usage: 'participants',
     });

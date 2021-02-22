@@ -117,7 +117,7 @@ client.on('channelDelete', async (channel) => {
     if (channel.id === guildInfo.channelId) {
       guildInfo.channelId = GuildInfoManager.unspecifiedChannel;
       await GuildInfoManager.set(guild.id, guildInfo);
-      warningMessage(guild, MessageDecorator.setupNewChannelMessage());
+      warningMessage(guild, MessageDecorator.setupNewChannelMessage(guildInfo.prefix));
     }
   }
 });

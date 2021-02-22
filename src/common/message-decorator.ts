@@ -1,4 +1,5 @@
 import {Client, MessageEmbed} from 'discord.js';
+import {CommandInfo} from '../commands/help';
 import {Event} from '../cache/conversation-manager';
 
 const pads = (s: number): string => {
@@ -233,13 +234,26 @@ export default class MessageDecorator {
         .setColor(gold);
   }
 
-  public static setupNewChannelMessage(): MessageEmbed {
+  public static setupNewChannelMessage(prefix: string): MessageEmbed {
     return new MessageEmbed()
         .setTitle('Warning, the default channel for broadcasting events has been deleted')
         .setDescription('You should use the `channel` command to set up a new channel for broadcasting events.')
         .addFields(
-            {name: '!channel', value: 'To set a channel for broadcasting events', inline: true},
+            {name: `${prefix}channel`, value: 'To set a channel for broadcasting events', inline: true},
         )
         .setColor('RED');
+  }
+
+  public static commandsList(prefix: string, commandInfo: CommandInfo[]): MessageEmbed {
+    const embed = new MessageEmbed();
+    embed.setTitle('Commands')
+        .setDescription(`Use \`${prefix}help <command>\` to get more information about a specific command.`)
+        .setColor(gold);
+
+    commandInfo.forEach(({name, description}) => {
+      embed.addField(name, description, true);
+    });
+
+    return embed;
   }
 }

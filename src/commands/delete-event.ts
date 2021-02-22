@@ -1,11 +1,11 @@
-import {Client} from 'discord.js';
 import Command from '../base/command';
 import DeleteEventDialog from '../dialogs/delete-event';
 
 export default class DeleteEventCommand extends Command {
-  constructor(client: Client) {
-    super(client, {
+  constructor() {
+    super({
       name: 'delete',
+      description: 'Deletes one of the events you created.',
       dmOnly: true,
       usage: 'delete',
     });

@@ -1,13 +1,13 @@
-import {Client} from 'discord.js';
 import Command from '../base/command';
 import GuildInfoManager from '../cache/guild-info-manager';
 import MessageDecorator from '../common/message-decorator';
 
 export default class PrefixCommand extends Command {
-  constructor(client: Client) {
-    super(client, {
+  constructor() {
+    super({
       name: 'prefix',
-      permissions: ['ADMINISTRATOR'],
+      description: 'Set a custom prefix for your server.',
+      permissions: ['MANAGE_GUILD'],
       guildOnly: true,
       usage: `prefix <new prefix>`,
     });

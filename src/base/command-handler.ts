@@ -19,7 +19,12 @@ export default class CommandHandler {
     commandFileNames = commandFileNames.filter((name) => name.endsWith('.js'));
     for (const filename of commandFileNames) {
       const Cmd = require(`${this.path}/${filename}`).default;
-      const command = new Cmd();
+      let command;
+      if (Cmd.isHelp) {
+        command = new Cmd(this.commands);
+      } else {
+        command = new Cmd();
+      }
       this.commands.set(command.name, command);
     }
   }

@@ -1,14 +1,14 @@
-import {Client} from 'discord.js';
 import InputValidator from '../common/input-validator';
 import Command from '../base/command';
 import MessageDecorator from '../common/message-decorator';
 import GuildInfoManager from '../cache/guild-info-manager';
 
 export default class TimezoneCommand extends Command {
-  constructor(client: Client) {
-    super(client, {
+  constructor() {
+    super({
       name: 'timezone',
-      permissions: ['ADMINISTRATOR'],
+      description: 'Set the timezone that will be used for the events in your server.',
+      permissions: ['MANAGE_GUILD'],
       guildOnly: true,
       usage: 'timezone <timezone offset>',
     });
