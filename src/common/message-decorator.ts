@@ -232,4 +232,14 @@ export default class MessageDecorator {
         )
         .setColor(gold);
   }
+
+  public static setupNewChannelMessage(): MessageEmbed {
+    return new MessageEmbed()
+        .setTitle('Warning, the default channel for broadcasting events has been deleted')
+        .setDescription('You should use the `channel` command to set up a new channel for broadcasting events.')
+        .addFields(
+            {name: '!channel', value: 'To set a channel for broadcasting events', inline: true},
+        )
+        .setColor('RED');
+  }
 }

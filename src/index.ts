@@ -1,6 +1,6 @@
 require('dotenv').config();
 import path from 'path';
-import Discord, {MessageReaction, TextChannel} from 'discord.js';
+import Discord, {Guild, GuildChannel, MessageEmbed, MessageReaction, TextChannel} from 'discord.js';
 import GuildInfoManager from './cache/guild-info-manager';
 import ConversationManager from './cache/conversation-manager';
 import EventMessageManager from './cache/event-message-manager';
@@ -98,18 +98,7 @@ const handleReaction = async (messageReaction: MessageReaction, user: Discord.Us
 };
 
 client.on('guildCreate', (guild) => {
-  let foundAChannel = false;
-
-  for (const [, channel] of guild.channels.cache) {
-    if (channel.type == 'text' && channel.permissionsFor(guild.me).has('SEND_MESSAGES')) {
-      foundAChannel = true;
-      (channel as TextChannel).send(MessageDecorator.setupMessage());
-      break;
-    }
-  }
-  if (!foundAChannel) {
-    guild.owner.send(MessageDecorator.setupMessage());
-  }
+  warningMessage(guild, MessageDecorator.setupMessage());
 });
 
 client.on('guildDelete', (guild) => {
@@ -119,6 +108,19 @@ client.on('guildDelete', (guild) => {
       });
 });
 
+client.on('channelDelete', async (channel) => {
+  if (channel.type === 'text') {
+    const guild = (channel as GuildChannel).guild;
+    const guildInfo = await GuildInfoManager.get(guild.id);
+
+    if (channel.id === guildInfo.channelId) {
+      guildInfo.channelId = GuildInfoManager.unspecifiedChannel;
+      await GuildInfoManager.set(guild.id, guildInfo);
+      warningMessage(guild, MessageDecorator.setupNewChannelMessage());
+    }
+  }
+});
+
 
 client.login(process.env.DISCORD_TOKEN);
 
@@ -126,4 +128,19 @@ function getCommand(message: EnrichedMessage) {
   const args = message.content.slice(message.prefix.length).trim().split(/ +/);
   const command = args.shift().toLowerCase();
   return {commandName: command, args: args};
+}
+
+function warningMessage(guild: Guild, embed: MessageEmbed) {
+  let foundAChannel = false;
+  for (const [, channel] of guild.channels.cache) {
+    if (channel.type == 'text' && channel.permissionsFor(guild.me).has('SEND_MESSAGES')) {
+      foundAChannel = true;
+      (channel as TextChannel).send(embed);
+      break;
+    }
+  }
+
+  if (!foundAChannel) {
+    guild.owner.send(embed);
+  }
 }
