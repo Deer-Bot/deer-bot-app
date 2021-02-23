@@ -18,10 +18,15 @@ client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}!`);
 });
 
+client.on('error', (err) => console.log(err));
+
 client.on('message', async (message: EnrichedMessage) => {
   if (message.author.bot || (message.channel.type !== 'dm' && message.channel.type !== 'text')) {
     return;
   }
+
+  console.log(message.content);
+  console.log(client.commands);
 
   if (message.channel.type == 'dm') {
     const conversation = await ConversationManager.get(message.author.id);
@@ -46,11 +51,12 @@ client.on('message', async (message: EnrichedMessage) => {
     console.log(err.message);
   }
 
+  console.log(`prefix: ${prefix}`);
+
   message.prefix = prefix || GuildInfoManager.defaultPrefix;
   if (!message.content.startsWith(message.prefix)) {
     return;
   }
-
   const {commandName, args} = getCommand(message);
 
   client.commands.run(commandName, args, message);
