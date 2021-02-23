@@ -35,7 +35,7 @@ jobs:
             registry-password: ${{ secrets.REGISTRY_PASSWORD }}
             name: deer-bot-app
             secure-environment-variables: DISCORD_TOKEN=${{ secrets.DISCORD_TOKEN }} API_ENDPOINT=${{ secrets.API_ENDPOINT }} REDIS_HOSTNAME=${{ secrets.REDIS_HOSTNAME }} REDIS_PORT=${{ secrets.REDIS_PORT }} REDIS_KEY=${{ secrets.REDIS_KEY }}
-            location: 'west eu'
+            location: 'westeurope'
             os-type: 'Linux'
             ports: 80 443
             cpu: 1
