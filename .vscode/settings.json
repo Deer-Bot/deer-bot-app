@@ -1,4 +1,8 @@
 {
   "eslint.lintTask.options": "./src",
-  "editor.tabSize": 2
+  "editor.tabSize": 2,
+  "appService.zipIgnorePattern": [
+    "node_modules{,/**}",
+    ".vscode{,/**}"
+  ]
 }
