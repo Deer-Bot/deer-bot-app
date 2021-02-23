@@ -25,9 +25,6 @@ client.on('message', async (message: EnrichedMessage) => {
     return;
   }
 
-  console.log(message.content);
-  console.log(client.commands);
-
   if (message.channel.type == 'dm') {
     const conversation = await ConversationManager.get(message.author.id);
     if (conversation != undefined) {
