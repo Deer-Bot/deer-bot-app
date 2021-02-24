@@ -1,13 +1,15 @@
+import {Tedis} from 'tedis';
+
 interface GetFunction {
-  (key: string): Promise<number | string | {[index: string]: string}>
+  (key: string, tedis: Tedis): Promise<number | string | {[index: string]: string}>
 }
 
 interface SetFunction {
-  (key: string, value: any): Promise<string>
+  (key: string, value: any, tedis: Tedis): Promise<string>
 }
 
 interface DelFunction {
-  (key: string): Promise<number>
+  (key: string, tedis: Tedis): Promise<number>
 }
 
 export default class RedisDb {

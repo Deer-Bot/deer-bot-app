@@ -34,6 +34,34 @@ index e60e664..3c07d9d 100644
        });
      } else {
        this.socket = createConnection({
+diff --git a/node_modules/tedis/src/core/pool.ts b/node_modules/tedis/src/core/pool.ts
+index 531300e..22175c0 100644
+--- a/node_modules/tedis/src/core/pool.ts
++++ b/node_modules/tedis/src/core/pool.ts
+@@ -19,8 +19,9 @@ export class TedisPool implements InterfacePool {
+   private password?: string;
+   private timeout?: number;
+   private tls?: {
+-    key: Buffer;
+-    cert: Buffer;
++    key?: Buffer;
++    cert?: Buffer;
++    servername?: string;
+   };
+   constructor(
+     options: {
+@@ -31,8 +32,9 @@ export class TedisPool implements InterfacePool {
+       max_conn?: number;
+       timeout?: number;
+       tls?: {
+-        key: Buffer;
+-        cert: Buffer;
++        key?: Buffer;
++        cert?: Buffer;
++        servername?: string;
+       };
+     } = {}
+   ) {
 diff --git a/node_modules/tedis/src/core/tedis.ts b/node_modules/tedis/src/core/tedis.ts
 index 8140c0d..17367c2 100644
 --- a/node_modules/tedis/src/core/tedis.ts
@@ -51,7 +79,7 @@ index 8140c0d..17367c2 100644
    }) => InterfaceRedis
  >(Base, [RedisKey, RedisString, RedisHash, RedisList, RedisSet, RedisZset]) {}
 diff --git a/node_modules/tedis/types/index.d.ts b/node_modules/tedis/types/index.d.ts
-index d14f01c..d9c868c 100644
+index d14f01c..de50dc0 100644
 --- a/node_modules/tedis/types/index.d.ts
 +++ b/node_modules/tedis/types/index.d.ts
 @@ -7,8 +7,9 @@ export class Tedis {
@@ -66,3 +94,15 @@ index d14f01c..d9c868c 100644
      };
    });
    public command(...parameters: Array<string | number>): Promise<any>;
+@@ -401,8 +402,9 @@ export class TedisPool {
+     max_conn?: number;
+     timeout?: number;
+     tls?: {
+-      key: Buffer;
+-      cert: Buffer;
++      key?: Buffer;
++      cert?: Buffer;
++      servername?: string;
+     };
+   });
+   public getTedis(): Promise<Tedis>;

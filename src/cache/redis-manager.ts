@@ -1,7 +1,7 @@
-import {Tedis} from 'tedis';
+import {TedisPool} from 'tedis';
 import RedisDb from './redis-db.js';
 
-const cacheConnection = new Tedis({
+const connectionPool = new TedisPool({
   host: process.env.REDIS_HOSTNAME,
   port: process.env.REDIS_PORT as any as number,
   password: process.env.REDIS_KEY,
@@ -10,18 +10,12 @@ const cacheConnection = new Tedis({
   },
 });
 
-cacheConnection.get = cacheConnection.get.bind(cacheConnection);
-cacheConnection.hgetall = cacheConnection.hgetall.bind(cacheConnection);
-cacheConnection.set = cacheConnection.set.bind(cacheConnection);
-cacheConnection.hmset = cacheConnection.hmset.bind(cacheConnection);
-cacheConnection.del = cacheConnection.del.bind(cacheConnection);
-
 interface Databases {
   [index: string]: RedisDb;
 }
 
 export default class RedisManager {
-  private client: Tedis;
+  private pool: TedisPool;
   private db: Databases;
   private static instance: RedisManager;
   public static readonly Conversation = 'conversation';
@@ -30,11 +24,11 @@ export default class RedisManager {
 
 
   private constructor() {
-    this.client = cacheConnection;
+    this.pool = connectionPool;
     this.db = {
-      conversation: new RedisDb(0, 300, this.client.hgetall, this.client.hmset, this.client.del),
-      guildInfo: new RedisDb(1, 3600, this.client.hgetall, this.client.hmset, this.client.del),
-      messageEvent: new RedisDb(2, 3600, this.client.get, this.client.set, this.client.del),
+      conversation: new RedisDb(0, 300, (key, tedis) => tedis.hgetall(key), (key, value, tedis) => tedis.hmset(key, value), (key, tedis) => tedis.del(key)),
+      guildInfo: new RedisDb(1, 3600, (key, tedis) => tedis.hgetall(key), (key, value, tedis) => tedis.hmset(key, value), (key, tedis) => tedis.del(key)),
+      messageEvent: new RedisDb(2, 3600, (key, tedis) => tedis.get(key), (key, value, tedis) => tedis.set(key, value), (key, tedis) => tedis.del(key)),
     };
   }
 
@@ -47,40 +41,48 @@ export default class RedisManager {
   }
 
   async set(key: string, value: Object, dbName: string): Promise<boolean> {
+    const client = await this.pool.getTedis();
     const db = this.db[dbName];
     if (db === undefined) {
       throw new Error('Redis database not found');
     }
 
-    await this.client.command('select', db.index);
-    const result = await db.set(key, value);
-    await this.client.expire(key, db.ttl);
+    await client.command('select', db.index);
+    const result = await db.set(key, value, client);
+    await client.expire(key, db.ttl);
+    this.pool.putTedis(client);
 
 
     return result === 'OK';
   }
 
   async get(key: string, dbName: string): Promise< number | string | {[index: string]: string}> {
+    const client = await this.pool.getTedis();
     const db = this.db[dbName];
     if (db === undefined) {
       throw new Error('Redis database not found');
     }
 
-    await this.client.command('select', db.index);
+    await client.command('select', db.index);
 
-    const result = await db.get(key);
-    await this.client.expire(key, db.ttl);
+    const result = await db.get(key, client);
+    await client.expire(key, db.ttl);
+    this.pool.putTedis(client);
 
     return result;
   }
 
   async del(key: string, dbName: string): Promise<number> {
+    const client = await this.pool.getTedis();
     const db = this.db[dbName];
     if (db === undefined) {
       throw new Error('Redis database not found');
     }
 
-    await this.client.command('select', db.index);
-    return this.client.del(key);
+    await client.command('select', db.index);
+    const result = await db.del(key, client);
+    this.pool.putTedis(client);
+
+    return result;
   }
 }
