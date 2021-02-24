@@ -38,11 +38,4 @@ jobs:
             network-profile: ${{ secrets.NETWORK_PROFILE }}
             os-type: 'Linux'
             restart-policy: OnFailure
-            containers: 
-            - name: deer-bot-app
-              image: ${{ secrets.REGISTRY_LOGIN_SERVER }}/deer-bot-app:${{ github.sha }}
-              ports: 80 443
-              cpu: 1
-              memory: 1
-              secureEnvironmentVariables: DISCORD_TOKEN=${{ secrets.DISCORD_TOKEN }} API_ENDPOINT=${{ secrets.API_ENDPOINT }} REDIS_HOSTNAME=${{ secrets.REDIS_HOSTNAME }} REDIS_PORT=${{ secrets.REDIS_PORT }} REDIS_KEY=${{ secrets.REDIS_KEY }}
-              
+            containers: '[{"name": "deer-bot-app", "image": "${{ secrets.REGISTRY_LOGIN_SERVER }}/deer-bot-app:${{ github.sha }}", "ports": "80 443", "cpu": 1, "memory": 1, "secureEnvironmentVariables": "DISCORD_TOKEN=${{ secrets.DISCORD_TOKEN }} API_ENDPOINT=${{ secrets.API_ENDPOINT }} REDIS_HOSTNAME=${{ secrets.REDIS_HOSTNAME }} REDIS_PORT=${{ secrets.REDIS_PORT }} REDIS_KEY=${{ secrets.REDIS_KEY }}"}]'
