@@ -25,7 +25,7 @@ jobs:
             docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/deer-bot-app:${{ github.sha }}
 
         - name: 'Deploy to Azure Container Instances'
-          uses: 'azure/aci-deploy@v1'
+          uses: 'PierreVH2/azure-containergroup-deploy@v0.4.1'
           with:
             resource-group: ${{ secrets.RESOURCE_GROUP }}
             dns-name-label: ${{ secrets.RESOURCE_GROUP }}${{ github.run_number }}
@@ -40,3 +40,7 @@ jobs:
             ports: 80 443
             cpu: 1
             memory: 1
+            network-profile: ${{ secrets.NETWORK_PROFILE }}
+            ip-address: Private
+            restart-policy: OnFailure
+

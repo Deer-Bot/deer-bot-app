@@ -1,0 +1,68 @@
+diff --git a/node_modules/tedis/build/core/base.js b/node_modules/tedis/build/core/base.js
+index e9069db..4bd3c6e 100644
+--- a/node_modules/tedis/build/core/base.js
++++ b/node_modules/tedis/build/core/base.js
+@@ -51,6 +51,7 @@ var Base = /** @class */ (function () {
+                 port: options.port || 6379,
+                 key: options.tls.key,
+                 cert: options.tls.cert,
++                servername: options.tls.servername
+             });
+         }
+         else {
+diff --git a/node_modules/tedis/src/core/base.ts b/node_modules/tedis/src/core/base.ts
+index e60e664..3c07d9d 100644
+--- a/node_modules/tedis/src/core/base.ts
++++ b/node_modules/tedis/src/core/base.ts
+@@ -32,8 +32,9 @@ export class Base implements InterfaceBase {
+       password?: string;
+       timeout?: number;
+       tls?: {
+-        key: Buffer;
+-        cert: Buffer;
++        key?: Buffer;
++        cert?: Buffer;
++        servername?: string;
+       };
+     } = {}
+   ) {
+@@ -44,6 +45,7 @@ export class Base implements InterfaceBase {
+         port: options.port || 6379,
+         key: options.tls.key,
+         cert: options.tls.cert,
++        servername: options.tls.servername,
+       });
+     } else {
+       this.socket = createConnection({
+diff --git a/node_modules/tedis/src/core/tedis.ts b/node_modules/tedis/src/core/tedis.ts
+index 8140c0d..17367c2 100644
+--- a/node_modules/tedis/src/core/tedis.ts
++++ b/node_modules/tedis/src/core/tedis.ts
+@@ -26,8 +26,9 @@ export class Tedis extends Mixins<
+     password?: string;
+     timeout?: number;
+     tls?: {
+-      key: Buffer;
+-      cert: Buffer;
++      key?: Buffer;
++      cert?: Buffer;
++      servername?: string;
+     };
+   }) => InterfaceRedis
+ >(Base, [RedisKey, RedisString, RedisHash, RedisList, RedisSet, RedisZset]) {}
+diff --git a/node_modules/tedis/types/index.d.ts b/node_modules/tedis/types/index.d.ts
+index d14f01c..d9c868c 100644
+--- a/node_modules/tedis/types/index.d.ts
++++ b/node_modules/tedis/types/index.d.ts
+@@ -7,8 +7,9 @@ export class Tedis {
+     password?: string;
+     timeout?: number;
+     tls?: {
+-      key: Buffer;
+-      cert: Buffer;
++      key?: Buffer;
++      cert?: Buffer;
++      servername?: string; 
+     };
+   });
+   public command(...parameters: Array<string | number>): Promise<any>;

@@ -8,11 +8,12 @@ COPY package*.json ./
 COPY tsconfig.json ./
 # copy source code to /app/src folder
 COPY src /bot/src
+COPY patches /bot/patches
 
 # check files list
 RUN ls -a
 
-RUN npm install
+RUN npm install --unsafe-perm
 RUN npm run build
 
 CMD [ "npm", "start" ]

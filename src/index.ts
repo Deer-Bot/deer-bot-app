@@ -18,7 +18,7 @@ client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}!`);
 });
 
-client.on('error', (err) => console.log(err));
+client.on('error', (err) => console.log(`Error: ${err}`));
 
 client.on('message', async (message: EnrichedMessage) => {
   if (message.author.bot || (message.channel.type !== 'dm' && message.channel.type !== 'text')) {
@@ -47,8 +47,6 @@ client.on('message', async (message: EnrichedMessage) => {
   } catch (err) {
     console.log(err.message);
   }
-
-  console.log(`prefix: ${prefix}`);
 
   message.prefix = prefix || GuildInfoManager.defaultPrefix;
   if (!message.content.startsWith(message.prefix)) {

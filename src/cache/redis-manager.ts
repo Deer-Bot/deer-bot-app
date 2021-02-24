@@ -5,7 +5,9 @@ const cacheConnection = new Tedis({
   host: process.env.REDIS_HOSTNAME,
   port: process.env.REDIS_PORT as any as number,
   password: process.env.REDIS_KEY,
-  // set tls,
+  tls: {
+    servername: process.env.REDIS_HOSTNAME,
+  },
 });
 
 cacheConnection.get = cacheConnection.get.bind(cacheConnection);
