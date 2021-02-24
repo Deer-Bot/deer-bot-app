@@ -27,20 +27,22 @@ jobs:
         - name: 'Deploy to Azure Container Instances'
           uses: 'PierreVH2/azure-containergroup-deploy@v0.4.1'
           with:
+            group-name: deer-bot-app
             resource-group: ${{ secrets.RESOURCE_GROUP }}
             dns-name-label: ${{ secrets.RESOURCE_GROUP }}${{ github.run_number }}
-            image: ${{ secrets.REGISTRY_LOGIN_SERVER }}/deer-bot-app:${{ github.sha }}
             registry-login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
             registry-username: ${{ secrets.REGISTRY_USERNAME }}
             registry-password: ${{ secrets.REGISTRY_PASSWORD }}
-            name: deer-bot-app
-            secure-environment-variables: DISCORD_TOKEN=${{ secrets.DISCORD_TOKEN }} API_ENDPOINT=${{ secrets.API_ENDPOINT }} REDIS_HOSTNAME=${{ secrets.REDIS_HOSTNAME }} REDIS_PORT=${{ secrets.REDIS_PORT }} REDIS_KEY=${{ secrets.REDIS_KEY }}
             location: 'westeurope'
-            os-type: 'Linux'
-            ports: 80 443
-            cpu: 1
-            memory: 1
-            network-profile: ${{ secrets.NETWORK_PROFILE }}
             ip-address: Private
+            network-profile: ${{ secrets.NETWORK_PROFILE }}
+            os-type: 'Linux'
             restart-policy: OnFailure
-
+            containers: 
+            - name: deer-bot-app
+              image: ${{ secrets.REGISTRY_LOGIN_SERVER }}/deer-bot-app:${{ github.sha }}
+              ports: 80 443
+              cpu: 1
+              memory: 1
+              secureEnvironmentVariables: DISCORD_TOKEN=${{ secrets.DISCORD_TOKEN }} API_ENDPOINT=${{ secrets.API_ENDPOINT }} REDIS_HOSTNAME=${{ secrets.REDIS_HOSTNAME }} REDIS_PORT=${{ secrets.REDIS_PORT }} REDIS_KEY=${{ secrets.REDIS_KEY }}
+              
