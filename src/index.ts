@@ -135,7 +135,7 @@ function getCommand(message: EnrichedMessage) {
 function warningMessage(guild: Guild, prefix: string, messageEmbedFunction: (prefix: string, guildName?: string) => MessageEmbed) {
   let foundAChannel = false;
   for (const [, channel] of guild.channels.cache) {
-    if (channel.type == 'text' && channel.permissionsFor(guild.me).has('SEND_MESSAGES')) {
+    if (!channel.deleted && channel.type == 'text' && channel.permissionsFor(guild.me).has('SEND_MESSAGES')) {
       foundAChannel = true;
       (channel as TextChannel).send(messageEmbedFunction(prefix));
       break;
