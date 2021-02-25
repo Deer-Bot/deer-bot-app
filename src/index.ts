@@ -100,7 +100,7 @@ const handleReaction = async (messageReaction: MessageReaction, user: Discord.Us
 };
 
 client.on('guildCreate', (guild) => {
-  warningMessage(guild, MessageDecorator.setupMessage());
+  warningMessage(guild, GuildInfoManager.defaultPrefix, MessageDecorator.setupMessage);
 });
 
 client.on('guildDelete', (guild) => {
@@ -118,7 +118,7 @@ client.on('channelDelete', async (channel) => {
     if (channel.id === guildInfo.channelId) {
       guildInfo.channelId = GuildInfoManager.unspecifiedChannel;
       await GuildInfoManager.set(guild.id, guildInfo);
-      warningMessage(guild, MessageDecorator.setupNewChannelMessage(guildInfo.prefix));
+      warningMessage(guild, guildInfo.prefix, MessageDecorator.setupNewChannelMessage);
     }
   }
 });
@@ -132,18 +132,18 @@ function getCommand(message: EnrichedMessage) {
   return {commandName: command, args: args};
 }
 
-function warningMessage(guild: Guild, embed: MessageEmbed) {
+function warningMessage(guild: Guild, prefix: string, messageEmbedFunction: (prefix: string, guildName?: string) => MessageEmbed) {
   let foundAChannel = false;
   for (const [, channel] of guild.channels.cache) {
     if (channel.type == 'text' && channel.permissionsFor(guild.me).has('SEND_MESSAGES')) {
       foundAChannel = true;
-      (channel as TextChannel).send(embed);
+      (channel as TextChannel).send(messageEmbedFunction(prefix));
       break;
     }
   }
 
   if (!foundAChannel) {
-    guild.owner.send(embed);
+    guild.owner.send(messageEmbedFunction(prefix, guild.name));
   }
 }
 

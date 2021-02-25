@@ -228,7 +228,7 @@ export default class MessageDecorator {
     return `${pads(day)}/${pads(month + 1)}/${year} at ${pads(hours)}:${pads(minutes)} GMT${timezoneOffset == 0 ? '' : timeZone}`;
   }
 
-  public static setupMessage(): MessageEmbed {
+  public static setupMessage(prefix: string, guildName?: string): MessageEmbed {
     return new MessageEmbed()
         .setTitle('Hi, I am Deer')
         .setDescription(`I can help you to create and manage events for your server, but first of all, use the following commands to let me know the things I need to work properly. ${MessageDecorator.deerEmoji}`)
@@ -236,16 +236,18 @@ export default class MessageDecorator {
             {name: '!channel', value: 'To set a channel for broadcasting events', inline: true},
             {name: '!timezone', value: 'To set up your timezone', inline: true},
         )
+        .setFooter(guildName ? `From server: ${guildName}` : '')
         .setColor(gold);
   }
 
-  public static setupNewChannelMessage(prefix: string): MessageEmbed {
+  public static setupNewChannelMessage(prefix: string, guildName?: string): MessageEmbed {
     return new MessageEmbed()
-        .setTitle('Warning, the default channel for broadcasting events has been deleted')
+        .setTitle(`Warning, the default channel for broadcasting events has been deleted`)
         .setDescription('You should use the `channel` command to set up a new channel for broadcasting events.')
         .addFields(
             {name: `${prefix}channel`, value: 'To set a channel for broadcasting events', inline: true},
         )
+        .setFooter(guildName ? `From server: ${guildName}` : '')
         .setColor('RED');
   }
 
