@@ -132,14 +132,14 @@ function getCommand(message: EnrichedMessage) {
   return {commandName: command, args: args};
 }
 
-function warningMessage(guild: Guild, prefix: string, messageEmbedFunction: (prefix: string, guildName?: string) => MessageEmbed) {
+async function warningMessage(guild: Guild, prefix: string, messageEmbedFunction: (prefix: string, guildName?: string) => MessageEmbed) {
   for (const [, channel] of guild.channels.cache) {
     if (!channel.deleted && channel.type == 'text' && channel.permissionsFor(guild.me).has('SEND_MESSAGES')) {
       return (channel as TextChannel).send(messageEmbedFunction(prefix));
     }
   }
-
-  return guild.owner.send(messageEmbedFunction(prefix, guild.name));
+  const owner = await guild.members.fetch(guild.ownerID);
+  return owner.send(messageEmbedFunction(prefix, guild.name));
 }
 
 function fetchOldMessages(): void {
@@ -152,7 +152,7 @@ function fetchOldMessages(): void {
               .catch((err) => {
                 // Handle message/channel deletion
                 if (err.code && (err.code === Discord.Constants.APIErrors.UNKNOWN_CHANNEL || err.code === Discord.Constants.APIErrors.UNKNOWN_MESSAGE)) {
-                  console.log(`Message or channel was deleted and won't be fetched`);
+                  console.log(`Message or channel was deleted and won't be fetched. MessageInfo:`, messageInfo);
                 } else {
                   throw err;
                 }
