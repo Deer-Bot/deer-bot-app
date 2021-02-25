@@ -148,7 +148,15 @@ function fetchOldMessages(): void {
         const messageInfos: MessageInfo[] = body.messageInfos;
         return Promise.all(messageInfos.map((messageInfo: MessageInfo) => {
           return client.channels.fetch(messageInfo.channelId)
-              .then((channel) => (channel as TextChannel).messages.fetch(messageInfo.messageId));
+              .then((channel) => (channel as TextChannel).messages.fetch(messageInfo.messageId))
+              .catch((err) => {
+                // Handle message/channel deletion
+                if (err.code && (err.code === Discord.Constants.APIErrors.UNKNOWN_CHANNEL || err.code === Discord.Constants.APIErrors.UNKNOWN_MESSAGE)) {
+                  console.log(`Message or channel was deleted and won't be fetched`);
+                } else {
+                  throw err;
+                }
+              });
         }));
       })
       .catch((err) => {
