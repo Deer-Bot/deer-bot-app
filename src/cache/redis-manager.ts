@@ -26,7 +26,7 @@ export default class RedisManager {
   private constructor() {
     this.pool = connectionPool;
     this.db = {
-      conversation: new RedisDb(0, 300, (key, tedis) => tedis.hgetall(key), (key, value, tedis) => tedis.hmset(key, value), (key, tedis) => tedis.del(key)),
+      conversation: new RedisDb(0, 600, (key, tedis) => tedis.hgetall(key), (key, value, tedis) => tedis.hmset(key, value), (key, tedis) => tedis.del(key)),
       guildInfo: new RedisDb(1, 3600, (key, tedis) => tedis.hgetall(key), (key, value, tedis) => tedis.hmset(key, value), (key, tedis) => tedis.del(key)),
       messageEvent: new RedisDb(2, 3600, (key, tedis) => tedis.get(key), (key, value, tedis) => tedis.set(key, value), (key, tedis) => tedis.del(key)),
     };
